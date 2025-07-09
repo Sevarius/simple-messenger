@@ -11,7 +11,6 @@ internal static class Program
 {
     public static void Main(string[] args)
     {
-        // Create initial configuration to bootstrap Serilog
         var configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
@@ -19,7 +18,6 @@ internal static class Program
             .AddEnvironmentVariables()
             .Build();
 
-        // Configure Serilog from configuration
         Log.Logger = new LoggerConfiguration()
             .ReadFrom.Configuration(configuration)
             .Enrich.FromLogContext()
@@ -30,8 +28,7 @@ internal static class Program
             Log.Information("Starting SimpleMessenger Host");
             
             var builder = WebApplication.CreateBuilder(args);
-            
-            // Add Serilog
+
             builder.Host.UseSerilog();
             
             builder.Services.ConfigureWebApiServices();

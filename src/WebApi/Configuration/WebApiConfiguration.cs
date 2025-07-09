@@ -2,9 +2,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
-using System;
-using System.IO;
 using System.Reflection;
+using WebApi.Hubs;
 
 namespace WebApi.Configuration;
 
@@ -14,29 +13,19 @@ public static class WebApiConfiguration
     {
         services.AddControllers();
 
+        services.AddSignalR();
+
         services.AddEndpointsApiExplorer();
 
-        services.AddSwaggerGen(c =>
+        services.AddSwaggerGen(swaggerGenOptions =>
         {
-            c.SwaggerDoc("v1", new OpenApiInfo
+            swaggerGenOptions.SwaggerDoc("v1", new OpenApiInfo
             {
                 Version = "v1",
-                Title = "SimpleMessenger API",
-                Description = "A simple messaging API built with ASP.NET Core",
-                Contact = new OpenApiContact
-                {
-                    Name = "SimpleMessenger Team",
-                    Email = "info@simplemessenger.com"
-                }
+                Title = "SimpleMessenger API"
             });
-
-            // Include XML comments
-            var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-            var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-            if (File.Exists(xmlPath))
-            {
-                c.IncludeXmlComments(xmlPath);
-            }
+            
+            swaggerGenOptions.AddSignalRSwaggerGen(signalRSwaggerGenOptions => signalRSwaggerGenOptions.ScanAssemblies(Assembly.GetExecutingAssembly()));
         });
 
         return services;
@@ -50,9 +39,11 @@ public static class WebApiConfiguration
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "SimpleMessenger API V1");
-                c.RoutePrefix = string.Empty; // Set Swagger UI at the app's root
+                c.RoutePrefix = "swagger";
             });
         }
+
+        app.MapHub<CommandHub>("api/commandHub");
 
         app.MapControllers();
 
