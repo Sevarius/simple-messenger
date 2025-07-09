@@ -3,6 +3,7 @@ using System.IO;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Serilog;
+using WebApi.Configuration;
 
 namespace Host;
 
@@ -33,9 +34,11 @@ internal static class Program
             // Add Serilog
             builder.Host.UseSerilog();
             
+            builder.Services.ConfigureWebApiServices();
+            
             var app = builder.Build();
 
-            app.MapGet("/", () => "Hello World!");
+            app.UseWebApi();
 
             app.Run();
         }
