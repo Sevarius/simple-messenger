@@ -2,8 +2,12 @@ using System;
 using System.IO;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.OpenApi.Models;
 using Serilog;
-using WebApi.Configuration;
+using SignalRApi;
+using SignalRApi.Configuration;
 
 namespace Host;
 
@@ -31,11 +35,22 @@ internal static class Program
 
             builder.Host.UseSerilog();
             
-            builder.Services.ConfigureWebApiServices();
+            ConfigureServices(builder.Services);
             
             var app = builder.Build();
 
-            app.UseWebApi();
+            app.MapControllers();
+            app.MapSignalRHubs();
+            
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "SimpleMessenger API V1");
+                    c.RoutePrefix = "swagger";
+                });
+            }
 
             app.Run();
         }
@@ -47,5 +62,23 @@ internal static class Program
         {
             Log.CloseAndFlush();
         }
+    }
+
+    private static void ConfigureServices(IServiceCollection services)
+    {
+        services.AddControllers();
+        services.AddEndpointsApiExplorer();
+        services.AddSignalR();
+
+        services.AddSwaggerGen(swaggerGenOptions =>
+        {
+            swaggerGenOptions.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Version = "v1",
+                Title = "SimpleMessenger API"
+            });
+            
+            swaggerGenOptions.AddSignalRSwaggerGen(signalRSwaggerGenOptions => signalRSwaggerGenOptions.ScanAssemblies(typeof(SignalRAssemblyReference).Assembly));
+        });
     }
 }
