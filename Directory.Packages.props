@@ -4,6 +4,7 @@
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup Label="Configuration">
+    <PackageVersion Include="Ensure.That" Version="10.1.0" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
     <PackageVersion Include="SignalRSwaggerGen" Version="4.8.0" />
   </ItemGroup>

@@ -30,18 +30,18 @@ internal static class Program
         try
         {
             Log.Information("Starting SimpleMessenger Host");
-            
+
             var builder = WebApplication.CreateBuilder(args);
 
             builder.Host.UseSerilog();
-            
+
             ConfigureServices(builder.Services);
-            
+
             var app = builder.Build();
 
             app.MapControllers();
             app.MapSignalRHubs();
-            
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -77,7 +77,7 @@ internal static class Program
                 Version = "v1",
                 Title = "SimpleMessenger API"
             });
-            
+
             swaggerGenOptions.AddSignalRSwaggerGen(signalRSwaggerGenOptions => signalRSwaggerGenOptions.ScanAssemblies(typeof(SignalRAssemblyReference).Assembly));
         });
     }
