@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using Data;
+using Data.Migrations;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,7 +37,7 @@ internal static class Program
 
             builder.Host.UseSerilog();
 
-            ConfigureServices(builder.Services);
+            ConfigureServices(builder.Services, builder.Configuration);
 
             var app = builder.Build();
 
@@ -64,11 +66,13 @@ internal static class Program
         }
     }
 
-    private static void ConfigureServices(IServiceCollection services)
+    private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddControllers();
         services.AddEndpointsApiExplorer();
         services.AddSignalR();
+
+        services.AddDbContext(configuration.GetConnectionString("DataBase")!, typeof(MigrationsAssemblyReference).Assembly);
 
         services.AddSwaggerGen(swaggerGenOptions =>
         {
