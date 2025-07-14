@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Application.Messages.Commands;
 using EnsureThat;
@@ -42,5 +43,5 @@ internal sealed class MessagesHub : Hub
         => await this.Groups.RemoveFromGroupAsync(this.Context.ConnectionId, GetUserId(this.Context).ToString());
 
     private static Guid GetUserId(HubCallerContext context)
-        => Guid.Parse(context.User!.Claims.SingleOrDefault(claim => claim.Type == "user_id")?.Value!);
+        => Guid.Parse(context.User!.Claims.First(claim => claim.Type == ClaimTypes.Sid).Value);
 }

@@ -1,7 +1,10 @@
 using System;
 using System.IO;
+using Application;
 using Data;
 using Data.Migrations;
+using Host.Authentification;
+using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,7 +23,6 @@ internal static class Program
         var configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-            .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json", optional: true)
             .AddEnvironmentVariables()
             .Build();
 
@@ -68,9 +70,18 @@ internal static class Program
 
     private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
+        services.AddMediatR(
+            configure =>
+            {
+                configure.RegisterServicesFromAssembly(typeof(ApplicationAssemblyReference).Assembly);
+            });
+
         services.AddControllers();
         services.AddEndpointsApiExplorer();
         services.AddSignalR();
+
+        services.AddAuthentication("CustomToken")
+            .AddScheme<BearerTokenOptions, CustomTokenSchemeHandler>("CustomToken", configureOptions: null);
 
         services.AddDbContext(configuration.GetConnectionString("DataBase")!, typeof(MigrationsAssemblyReference).Assembly);
 
