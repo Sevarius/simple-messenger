@@ -7,8 +7,8 @@ public static class SignalRConfiguration
 {
     public static WebApplication MapSignalRHubs(this WebApplication app)
     {
-        app.MapHub<CommandHub>("api/commandHub");
+        app.MapHub<MessagesHub>("api/commandHub");
 
         return app;
     }
-} 
+}

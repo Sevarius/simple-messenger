@@ -6,4 +6,8 @@
     <PackageReference Include="SignalRSwaggerGen" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Application\Application.csproj" />
+  </ItemGroup>
+
 </Project>

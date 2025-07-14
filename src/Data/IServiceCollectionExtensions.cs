@@ -1,4 +1,6 @@
 using System.Reflection;
+using Application.Repositories;
+using Data.Repositories;
 using EnsureThat;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,6 +31,13 @@ public static class IServiceCollectionExtensions
 
             options.UseSnakeCaseNamingConvention();
         });
+
+        services.AddScoped<IChatsReadOnlyRepository, ChatsReadOnlyRepository>();
+        services.AddScoped<IChatsRepository, ChatsRepository>();
+        services.AddScoped<IMessagesReadOnlyRepository, MessagesReadOnlyRepository>();
+        services.AddScoped<IMessagesRepository, MessagesRepository>();
+        services.AddScoped<IUsersReadOnlyRepository, UsersReadOnlyRepository>();
+        services.AddScoped<IUsersRepository, UsersRepository>();
 
         return services;
     }
