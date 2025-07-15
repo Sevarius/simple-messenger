@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using Application.Chats.Commands;
@@ -13,7 +14,7 @@ using WebApi.Transfers;
 namespace WebApi.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/chats")]
 public class ChatsController : ControllerBase
 {
     public ChatsController(IMediator mediator)
@@ -32,7 +33,7 @@ public class ChatsController : ControllerBase
     {
         EnsureArg.IsNotNull(transfer, nameof(transfer));
 
-        var chatId = await this.mediator.Send(new CreatePrivateChat(transfer.ActorId, transfer.InterlocutorId), cancellationToken);
+        var chatId = await this.mediator.Send(new CreatePrivateChat(this.ActorId, transfer.InterlocutorId), cancellationToken);
 
         return new EntityCreatedResponse
         {
@@ -41,14 +42,24 @@ public class ChatsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ChatResponse[]> ListChatsAsync(
-        [FromQuery] Guid userId,
-        CancellationToken cancellationToken)
+    public async Task<ChatResponse[]> ListChatsAsync(CancellationToken cancellationToken)
     {
-        EnsureArg.IsNotDefault(userId, nameof(userId));
-
-        var chats = await this.mediator.Send(new ListChats(userId), cancellationToken);
+        var chats = await this.mediator.Send(new ListChats(this.ActorId), cancellationToken);
 
         return chats.Select(ChatResponse.From).ToArray();
     }
+
+    [HttpGet("{chatId}")]
+    public async Task<ChatResponse> GetChatAsync(
+        [FromRoute] Guid chatId,
+        CancellationToken cancellationToken)
+    {
+        EnsureArg.IsNotDefault(chatId, nameof(chatId));
+
+        var chat = await this.mediator.Send(new GetChat(chatId, this.ActorId), cancellationToken);
+
+        return ChatResponse.From(chat);
+    }
+
+    private Guid ActorId => Guid.Parse(this.User!.Claims.First(claim => claim.Type == ClaimTypes.Sid).Value);
 }

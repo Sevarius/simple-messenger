@@ -40,4 +40,14 @@ public sealed class ChatsReadOnlyRepository : IChatsReadOnlyRepository
             .AsNoTracking()
             .AnyAsync(chat => chat.Id == chatId && chat.Users.Any(user => user.Id == userId), cancellationToken);
     }
+
+    public async Task<Chat> GetByIdAsync(Guid chatId, CancellationToken cancellationToken)
+    {
+        EnsureArg.IsNotDefault(chatId, nameof(chatId));
+
+        return await this.dbContext.Chats
+            .AsNoTracking()
+            .FirstOrDefaultAsync(chat => chat.Id == chatId, cancellationToken)
+            ?? throw new InvalidOperationException($"Chat with ID {chatId} not found");
+    }
 }

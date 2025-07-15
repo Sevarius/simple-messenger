@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,11 +8,12 @@ using EnsureThat;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Models;
+using WebApi.Transfers;
 
 namespace WebApi.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/users")]
 public class UsersController : ControllerBase
 {
     public UsersController(IMediator mediator)
@@ -24,11 +26,11 @@ public class UsersController : ControllerBase
     private readonly IMediator mediator;
 
     [HttpPost]
-    public async Task<EntityCreatedResponse> CreateUserAsync([FromBody] string name, CancellationToken cancellationToken)
+    public async Task<EntityCreatedResponse> CreateUserAsync([FromBody] CreateUserTransfer transfer, CancellationToken cancellationToken)
     {
-        var command = new CreateUser(name);
+        EnsureArg.IsNotNull(transfer, nameof(transfer));
 
-        var userId = await this.mediator.Send(command, cancellationToken);
+        var userId = await this.mediator.Send(new CreateUser(transfer.UserName), cancellationToken);
 
         return new EntityCreatedResponse
         {
@@ -42,5 +44,17 @@ public class UsersController : ControllerBase
         var users = await this.mediator.Send(new ListUsers(), cancellationToken);
 
         return users.Select(UserResponse.From).ToArray();
+    }
+
+    [HttpGet("{userId}")]
+    public async Task<UserResponse> GetUserAsync(
+        [FromRoute] Guid userId,
+        CancellationToken cancellationToken)
+    {
+        EnsureArg.IsNotDefault(userId, nameof(userId));
+
+        var user = await this.mediator.Send(new GetUser(userId), cancellationToken);
+
+        return UserResponse.From(user);
     }
 }

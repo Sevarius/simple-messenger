@@ -9,7 +9,6 @@ public sealed record ChatResponse
 {
     public required Guid Id { get; init; }
     public required UserResponse[] Users { get; init; }
-    public required string ChatType { get; init; }
 
     public static ChatResponse From(Chat chat)
     {
@@ -18,8 +17,7 @@ public sealed record ChatResponse
         return new ChatResponse
         {
             Id = chat.Id,
-            Users = chat.Users.Select(UserResponse.From).ToArray(),
-            ChatType = chat.GetType().Name
+            Users = chat.Users.Select(UserResponse.From).ToArray()
         };
     }
-} 
+}

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -26,4 +27,16 @@ public sealed class UsersReadOnlyRepository : IUsersReadOnlyRepository
         .Where(user => !user.IsDeleted)
         .OrderBy(user => user.UserName)
         .ToListAsync(cancellationToken);
+
+    public async Task<User> GetAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        EnsureArg.IsNotDefault(userId, nameof(userId));
+
+        var user = await this.dbContext.Users
+            .AsNoTracking()
+            .SingleOrDefaultAsync(user => user.Id == userId && !user.IsDeleted, cancellationToken)
+            ?? throw new InvalidOperationException($"User with ID {userId} not found.");
+
+        return user;
+    }
 }
