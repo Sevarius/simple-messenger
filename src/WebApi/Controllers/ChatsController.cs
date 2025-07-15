@@ -9,6 +9,7 @@ using EnsureThat;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Models;
+using Serilog;
 using WebApi.Transfers;
 
 namespace WebApi.Controllers;
@@ -24,30 +25,51 @@ public class ChatsController : ControllerBase
         this.mediator = mediator;
     }
 
+    private static readonly ILogger Logger = Log.ForContext<ChatsController>();
     private readonly IMediator mediator;
 
     [HttpPost]
-    public Task<ChatModel> CreateChatAsync(
+    public async Task<ChatModel> CreateChatAsync(
         [FromBody] CreatePrivateChatTransfer transfer,
         CancellationToken cancellationToken)
     {
         EnsureArg.IsNotNull(transfer, nameof(transfer));
 
-        return this.mediator.Send(new CreatePrivateChat(this.ActorId, transfer.InterlocutorId), cancellationToken);
+        Logger.Information("API: Creating private chat between actor {ActorId} and interlocutor {InterlocutorId}", this.ActorId, transfer.InterlocutorId);
+
+        var result = await this.mediator.Send(new CreatePrivateChat(this.ActorId, transfer.InterlocutorId), cancellationToken);
+
+        Logger.Information("API: Successfully created private chat with ID {ChatId}", result.Id);
+
+        return result;
     }
 
     [HttpGet]
-    public Task<ChatModel[]> ListChatsAsync(CancellationToken cancellationToken)
-        => this.mediator.Send(new ListChats(this.ActorId), cancellationToken);
+    public async Task<ChatModel[]> ListChatsAsync(CancellationToken cancellationToken)
+    {
+        Logger.Information("API: Listing chats for user {ActorId}", this.ActorId);
+
+        var result = await this.mediator.Send(new ListChats(this.ActorId), cancellationToken);
+
+        Logger.Information("API: Successfully listed {ChatCount} chats for user {ActorId}", result.Length, this.ActorId);
+
+        return result;
+    }
 
     [HttpGet("{chatId}")]
-    public Task<ChatModel> GetChatAsync(
+    public async Task<ChatModel> GetChatAsync(
         [FromRoute] Guid chatId,
         CancellationToken cancellationToken)
     {
         EnsureArg.IsNotDefault(chatId, nameof(chatId));
 
-        return this.mediator.Send(new GetChat(this.ActorId, chatId), cancellationToken);
+        Logger.Information("API: Getting chat {ChatId} for user {ActorId}", chatId, this.ActorId);
+
+        var result = await this.mediator.Send(new GetChat(this.ActorId, chatId), cancellationToken);
+
+        Logger.Information("API: Successfully retrieved chat {ChatId} for user {ActorId}", chatId, this.ActorId);
+
+        return result;
     }
 
     private Guid ActorId => Guid.Parse(this.User!.Claims.First(claim => claim.Type == ClaimTypes.Sid).Value);

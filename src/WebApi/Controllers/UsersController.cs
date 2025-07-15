@@ -7,6 +7,7 @@ using EnsureThat;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Models;
+using Serilog;
 using WebApi.Transfers;
 
 namespace WebApi.Controllers;
@@ -22,27 +23,48 @@ public class UsersController : ControllerBase
         this.mediator = mediator;
     }
 
+    private static readonly ILogger Logger = Log.ForContext<UsersController>();
     private readonly IMediator mediator;
 
     [HttpPost]
-    public Task<UserModel> CreateUserAsync([FromBody] CreateUserTransfer transfer, CancellationToken cancellationToken)
+    public async Task<UserModel> CreateUserAsync([FromBody] CreateUserTransfer transfer, CancellationToken cancellationToken)
     {
         EnsureArg.IsNotNull(transfer, nameof(transfer));
 
-        return this.mediator.Send(new CreateUser(transfer.UserName), cancellationToken);
+        Logger.Information("API: Creating user with username {UserName}", transfer.UserName);
+
+        var result = await this.mediator.Send(new CreateUser(transfer.UserName), cancellationToken);
+
+        Logger.Information("API: Successfully created user with ID {UserId}", result.Id);
+
+        return result;
     }
 
     [HttpGet]
-    public Task<UserModel[]> ListUsersAsync(CancellationToken cancellationToken)
-        => this.mediator.Send(new ListUsers(), cancellationToken);
+    public async Task<UserModel[]> ListUsersAsync(CancellationToken cancellationToken)
+    {
+        Logger.Information("API: Listing all users");
+
+        var result = await this.mediator.Send(new ListUsers(), cancellationToken);
+
+        Logger.Information("API: Successfully listed {UserCount} users", result.Length);
+
+        return result;
+    }
 
     [HttpGet("{userId}")]
-    public Task<UserModel> GetUserAsync(
+    public async Task<UserModel> GetUserAsync(
         [FromRoute] Guid userId,
         CancellationToken cancellationToken)
     {
         EnsureArg.IsNotDefault(userId, nameof(userId));
 
-        return this.mediator.Send(new GetUser(userId), cancellationToken);
+        Logger.Information("API: Getting user with ID {UserId}", userId);
+
+        var result = await this.mediator.Send(new GetUser(userId), cancellationToken);
+
+        Logger.Information("API: Successfully retrieved user with ID {UserId}", userId);
+
+        return result;
     }
 }

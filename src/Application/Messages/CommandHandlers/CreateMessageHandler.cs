@@ -9,6 +9,7 @@ using Domain.Entities;
 using EnsureThat;
 using MediatR;
 using Models;
+using Serilog;
 
 namespace Application.Messages.CommandHandlers;
 
@@ -28,6 +29,7 @@ internal sealed class CreateMessageHandler : IRequestHandler<CreateMessage, Mess
         this.messagesRepository = messagesRepository;
     }
 
+    private static readonly ILogger Logger = Log.ForContext<CreateMessageHandler>();
     private readonly IUsersRepository usersRepository;
     private readonly IChatsRepository chatsRepository;
     private readonly IMessagesRepository messagesRepository;
@@ -36,12 +38,15 @@ internal sealed class CreateMessageHandler : IRequestHandler<CreateMessage, Mess
     {
         EnsureArg.IsNotNull(command, nameof(command));
 
+        Logger.Information("Creating message for chat {ChatId} by user {ActorId}", command.ChatId, command.ActorId);
+
         var actor = await this.usersRepository.GetAsync(command.ActorId, cancellationToken);
 
         var chat = await this.chatsRepository.GetAsync(command.ChatId, cancellationToken);
 
         if (!chat.Users.Contains(actor))
         {
+            Logger.Warning("User {ActorId} attempted to send message to chat {ChatId} without being a member", command.ActorId, command.ChatId);
             throw new ApplicationException("User is not a member of the chat.");
         }
 
@@ -50,6 +55,8 @@ internal sealed class CreateMessageHandler : IRequestHandler<CreateMessage, Mess
         this.messagesRepository.Insert(message);
 
         await this.messagesRepository.SaveChangesAsync(cancellationToken);
+
+        Logger.Information("Successfully created message with ID {MessageId} for chat {ChatId} by user {ActorId}", message.Id, command.ChatId, command.ActorId);
 
         return message.ToModel();
     }

@@ -6,6 +6,7 @@ using Application.Messages.Commands;
 using EnsureThat;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
+using Serilog;
 using SignalRSwaggerGen.Attributes;
 
 namespace SignalRApi.Hubs;
@@ -20,11 +21,14 @@ internal sealed class MessagesHub : Hub
         this.mediator = mediator;
     }
 
+    private static readonly ILogger Logger = Log.ForContext<MessagesHub>();
     private readonly IMediator mediator;
 
     public async Task SendMessage(Guid chatId, string content)
     {
         var actorId = GetUserId(this.Context);
+
+        Logger.Information("SignalR: User {ActorId} sending message to chat {ChatId}", actorId, chatId);
 
         var messageModel = await this.mediator.Send(
                 new CreateMessage(actorId, chatId, content),
@@ -34,13 +38,34 @@ internal sealed class MessagesHub : Hub
         await this.Clients.Group(actorId.ToString())
             .SendAsync("ReceiveMessage", messageModel)
             .ConfigureAwait(false);
+
+        Logger.Information("SignalR: Successfully sent message {MessageId} to chat {ChatId} by user {ActorId}", messageModel.Id, chatId, actorId);
     }
 
     public override async Task OnConnectedAsync()
-        => await this.Groups.AddToGroupAsync(this.Context.ConnectionId, GetUserId(this.Context).ToString());
+    {
+        var userId = GetUserId(this.Context);
+        Logger.Information("SignalR: User {UserId} connected with connection {ConnectionId}", userId, this.Context.ConnectionId);
+
+        await this.Groups.AddToGroupAsync(this.Context.ConnectionId, userId.ToString());
+
+        Logger.Information("SignalR: User {UserId} added to group", userId);
+    }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
-        => await this.Groups.RemoveFromGroupAsync(this.Context.ConnectionId, GetUserId(this.Context).ToString());
+    {
+        var userId = GetUserId(this.Context);
+        Logger.Information("SignalR: User {UserId} disconnected with connection {ConnectionId}", userId, this.Context.ConnectionId);
+
+        if (exception != null)
+        {
+            Logger.Warning("SignalR: User {UserId} disconnected due to exception: {Exception}", userId, exception.Message);
+        }
+
+        await this.Groups.RemoveFromGroupAsync(this.Context.ConnectionId, userId.ToString());
+
+        Logger.Information("SignalR: User {UserId} removed from group", userId);
+    }
 
     private static Guid GetUserId(HubCallerContext context)
         => Guid.Parse(context.User!.Claims.First(claim => claim.Type == ClaimTypes.Sid).Value);
