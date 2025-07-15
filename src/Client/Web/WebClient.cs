@@ -74,7 +74,7 @@ public sealed class WebClient : IWebClient
         EnsureArg.IsNotDefault(actorId, nameof(actorId));
         EnsureArg.IsNotNull(request, nameof(request));
 
-        Logger.Information("Creating private chat for actor {ActorId} with interlocutor {InterlocutorId}", 
+        Logger.Information("Creating private chat for actor {ActorId} with interlocutor {InterlocutorId}",
             actorId, request.InterlocutorId);
 
         var result = await this.PostAsync<CreatePrivateChatRequest, ChatModel>(actorId, "api/chats", request, cancellationToken);
@@ -175,10 +175,10 @@ public sealed class WebClient : IWebClient
 
         try
         {
-            var response = await this.httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            var response = await this.httpClient.SendAsync(request, cancellationToken);
             response.EnsureSuccessStatusCode();
 
-            var responseContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
             var result = JsonConvert.DeserializeObject<TResponse>(responseContent, this.jsonSettings)!;
 
             Logger.Information("POST request to {Url} completed successfully", url);
@@ -199,10 +199,10 @@ public sealed class WebClient : IWebClient
 
         try
         {
-            var response = await this.httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
+            var response = await this.httpClient.GetAsync(url, cancellationToken);
             response.EnsureSuccessStatusCode();
 
-            var responseContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
             var result = JsonConvert.DeserializeObject<TResponse>(responseContent, this.jsonSettings)!;
 
             Logger.Information("GET request to {Url} completed successfully", url);
@@ -227,10 +227,10 @@ public sealed class WebClient : IWebClient
 
         try
         {
-            var response = await this.httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            var response = await this.httpClient.SendAsync(request, cancellationToken);
             response.EnsureSuccessStatusCode();
 
-            var responseContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
             var result = JsonConvert.DeserializeObject<TResponse>(responseContent, this.jsonSettings)!;
 
             Logger.Information("Authenticated GET request to {Url} completed successfully", url);

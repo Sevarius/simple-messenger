@@ -65,7 +65,7 @@ internal sealed class UserService : IAsyncDisposable
     {
         EnsureArg.IsNotEmpty(interlocutorId, nameof(interlocutorId));
 
-        Logger.Information("Creating private chat between user {UserId} and interlocutor {InterlocutorId}", 
+        Logger.Information("Creating private chat between user {UserId} and interlocutor {InterlocutorId}",
             this.currentUser.Id, interlocutorId);
 
         var chat = await this.webClient.CreatePrivateChatAsync(
@@ -166,12 +166,12 @@ internal sealed class UserService : IAsyncDisposable
 
         if (this.currentChat.Id == message.ChatId)
         {
-            ConsoleWriter.WriteMessage(this.GetUser(message.ChatId), message);
+            ConsoleWriter.WriteMessage(this.GetUser(message.UserId), message);
             Logger.Information("Message displayed for current chat {ChatId}", message.ChatId);
         }
         else
         {
-            Logger.Information("Received message for different chat {MessageChatId}, current chat is {CurrentChatId}", 
+            Logger.Information("Received message for different chat {MessageChatId}, current chat is {CurrentChatId}",
                 message.ChatId, this.currentChat.Id);
         }
     }

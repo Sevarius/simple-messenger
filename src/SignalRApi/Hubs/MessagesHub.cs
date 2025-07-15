@@ -32,12 +32,9 @@ internal sealed class MessagesHub : Hub
 
         var messageModel = await this.mediator.Send(
                 new CreateMessage(actorId, chatId, content),
-                this.Context.ConnectionAborted)
-            .ConfigureAwait(false);
+                this.Context.ConnectionAborted);
 
-        await this.Clients.Group(actorId.ToString())
-            .SendAsync("ReceiveMessage", messageModel)
-            .ConfigureAwait(false);
+        await this.Clients.Group(actorId.ToString()).SendAsync("ReceiveMessage", messageModel);
 
         Logger.Information("SignalR: Successfully sent message {MessageId} to chat {ChatId} by user {ActorId}", messageModel.Id, chatId, actorId);
     }

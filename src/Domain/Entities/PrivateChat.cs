@@ -9,6 +9,7 @@ public sealed class PrivateChat : Chat
     {
         EnsureArg.IsNotNull(creator, nameof(creator));
         EnsureArg.IsNotNull(interlocutor, nameof(interlocutor));
+        EnsureArg.IsFalse(creator.Id == interlocutor.Id, nameof(interlocutor));
     }
 
 #nullable disable

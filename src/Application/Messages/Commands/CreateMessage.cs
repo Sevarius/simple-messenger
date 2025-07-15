@@ -10,7 +10,7 @@ public sealed record CreateMessage : IRequest<MessageModel>
     public CreateMessage(Guid actorId, Guid chatId, string content)
     {
         EnsureArg.IsNotEmpty(actorId, nameof(actorId));
-        EnsureArg.IsNotEmpty(chatId, nameof(actorId));
+        EnsureArg.IsNotEmpty(chatId, nameof(chatId));
         EnsureArg.IsNotNullOrWhiteSpace(content, nameof(content));
 
         this.ActorId = actorId;
