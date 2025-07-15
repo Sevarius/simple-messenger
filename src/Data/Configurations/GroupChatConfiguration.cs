@@ -12,15 +12,7 @@ public sealed class GroupChatConfiguration : IEntityTypeConfiguration<GroupChat>
             .IsRequired();
 
         builder.Property(groupChat => groupChat.Name)
-            .HasMaxLength(GroupChat.GroupChatMaxLength)
+            .HasMaxLength(GroupChat.GroupChatNameMaxLength)
             .IsRequired();
-
-        builder.HasIndex(groupChat => groupChat.CreatorId);
-
-        builder.HasOne<User>()
-            .WithMany()
-            .HasForeignKey(groupChat => groupChat.CreatorId)
-            .IsRequired()
-            .OnDelete(DeleteBehavior.Restrict);
     }
 }

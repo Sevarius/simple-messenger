@@ -20,17 +20,30 @@ public sealed class ChatConfiguration : IEntityTypeConfiguration<Chat>
             .ValueGeneratedNever()
             .IsRequired();
 
+        builder.Property(chat => chat.IdempotencyKey)
+            .HasMaxLength(Chat.IdempotencyKeyMaxLength)
+            .IsRequired();
+
         builder.HasDiscriminator<string>("chat_type")
             .HasValue<PrivateChat>("private_chat")
             .HasValue<GroupChat>("group_chat");
 
         builder.HasKey(chat => chat.Id);
 
+        builder.HasIndex(chat => chat.IdempotencyKey)
+            .IsUnique();
+
         builder.UseTphMappingStrategy();
 
         builder.HasMany<Message>()
             .WithOne()
             .HasForeignKey(chat => chat.ChatId)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.NoAction);
+
+        builder.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(chat => chat.CreatorId)
             .IsRequired()
             .OnDelete(DeleteBehavior.NoAction);
     }

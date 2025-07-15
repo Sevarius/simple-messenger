@@ -31,7 +31,7 @@ internal sealed class CreatePrivateChatHandler : IRequestHandler<CreatePrivateCh
         var actor = await this.usersRepository.GetAsync(command.ActorId, cancellationToken);
         var interlocutor = await this.usersRepository.GetAsync(command.InterlocutorId, cancellationToken);
 
-        var chat = new PrivateChat(actor, interlocutor);
+        var chat = PrivateChat.Create(actor, interlocutor);
 
         this.chatsRepository.Insert(chat);
 
