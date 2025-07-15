@@ -44,10 +44,14 @@ public sealed class UsersRepository : IUsersRepository
     }
 
     public async Task<User[]> ListAsync(CancellationToken cancellationToken)
-        => await this.dbContext.Users
-        .Where(user => !user.IsDeleted)
-        .OrderBy(user => user.UserName)
-        .ToArrayAsync(cancellationToken);
+    {
+        var result = await this.dbContext.Users
+            .Where(user => !user.IsDeleted)
+            .OrderBy(user => user.UserName)
+            .ToListAsync(cancellationToken);
+
+        return result.ToArray();
+    }
 
     public void Insert(User user)
     {

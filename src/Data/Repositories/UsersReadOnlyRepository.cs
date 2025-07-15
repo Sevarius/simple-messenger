@@ -21,13 +21,15 @@ public sealed class UsersReadOnlyRepository : IUsersReadOnlyRepository
 
     private readonly MessengerDbContext dbContext;
 
-    public Task<UserModel[]> ListAsync(CancellationToken cancellationToken)
+    public async Task<UserModel[]> ListAsync(CancellationToken cancellationToken)
     {
-        return this.dbContext.Users
+        var result = await this.dbContext.Users
             .AsNoTracking()
             .OrderBy(user => user.UserName)
             .Select(user => user.ToModel())
-            .ToArrayAsync(cancellationToken);
+            .ToListAsync(cancellationToken);
+
+        return result.ToArray();
     }
 
     public async Task<UserModel> GetAsync(Guid userId, CancellationToken cancellationToken)
@@ -36,8 +38,9 @@ public sealed class UsersReadOnlyRepository : IUsersReadOnlyRepository
 
         return await this.dbContext.Users
             .AsNoTracking()
+            .Where(user => user.Id == userId)
             .Select(user => user.ToModel())
-            .SingleOrDefaultAsync(user => user.Id == userId, cancellationToken)
+            .SingleOrDefaultAsync(cancellationToken)
             ?? throw new InvalidOperationException($"User with ID {userId} not found.");
     }
 }

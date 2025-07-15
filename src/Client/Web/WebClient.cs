@@ -4,6 +4,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Client.Models;
 using Client.Web.Models;
 using EnsureThat;
 using Newtonsoft.Json;
@@ -27,69 +28,69 @@ public sealed class WebClient : IWebClient
     };
 
     // Users endpoints
-    public Task<EntityCreatedResponse> CreateUserAsync(string userName, CancellationToken cancellationToken = default)
+    public Task<UserModel> CreateUserAsync(string userName, CancellationToken cancellationToken = default)
     {
         EnsureArg.IsNotNullOrWhiteSpace(userName, nameof(userName));
 
-        return this.PostAsync<CreateUserRequest, EntityCreatedResponse>(
+        return this.PostAsync<CreateUserRequest, UserModel>(
             "api/users",
-            new CreateUserRequest{ UserName = userName},
+            new CreateUserRequest { UserName = userName },
             cancellationToken);
     }
 
-    public Task<UserResponse[]> ListUsersAsync(CancellationToken cancellationToken)
-        => this.GetAsync<UserResponse[]>("api/users", cancellationToken);
+    public Task<UserModel[]> ListUsersAsync(CancellationToken cancellationToken)
+        => this.GetAsync<UserModel[]>("api/users", cancellationToken);
 
-    public Task<UserResponse> GetUserAsync(Guid userId, CancellationToken cancellationToken)
+    public Task<UserModel> GetUserAsync(Guid userId, CancellationToken cancellationToken)
     {
         EnsureArg.IsNotDefault(userId, nameof(userId));
 
-        return this.GetAsync<UserResponse>($"api/users/{userId}", cancellationToken);
+        return this.GetAsync<UserModel>($"api/users/{userId}", cancellationToken);
     }
 
-    public Task<EntityCreatedResponse> CreatePrivateChatAsync(Guid actorId, CreatePrivateChatRequest request, CancellationToken cancellationToken)
+    // Chats endpoints
+    public Task<ChatModel> CreatePrivateChatAsync(Guid actorId, CreatePrivateChatRequest request, CancellationToken cancellationToken)
     {
+        EnsureArg.IsNotDefault(actorId, nameof(actorId));
         EnsureArg.IsNotNull(request, nameof(request));
 
-        return this.PostAsync<CreatePrivateChatRequest, EntityCreatedResponse>(actorId, "api/chats", request, cancellationToken);
+        return this.PostAsync<CreatePrivateChatRequest, ChatModel>(actorId, "api/chats", request, cancellationToken);
     }
 
-    public Task<ChatResponse[]> ListChatsAsync(Guid actorId, CancellationToken cancellationToken)
+    public Task<ChatModel[]> ListChatsAsync(Guid actorId, CancellationToken cancellationToken)
     {
-        EnsureArg.IsNotEmpty(actorId, nameof(actorId));
-
-        return this.PostAsync<ChatResponse[]>(actorId, $"api/chats", cancellationToken);
-    }
-
-    public async Task<ChatResponse> GetChatAsync(Guid chatId, Guid userId, CancellationToken cancellationToken)
-    {
-        EnsureArg.IsNotDefault(chatId, nameof(chatId));
-        EnsureArg.IsNotDefault(userId, nameof(userId));
-
-        var response = await this.httpClient.GetAsync($"api/chats/{chatId}", cancellationToken);
-        response.EnsureSuccessStatusCode();
-
-        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
-        return JsonConvert.DeserializeObject<ChatResponse>(responseContent, this.jsonSettings)!;
-    }
-
-    public Task<MessageResponse[]> ListMessagesAsync(Guid actorId, Guid chatId, CancellationToken cancellationToken)
-    {
-        EnsureArg.IsNotDefault(chatId, nameof(chatId));
         EnsureArg.IsNotDefault(actorId, nameof(actorId));
 
-        return this.GetAsync<MessageResponse[]>(actorId, $"api/chats/{chatId}/messages", cancellationToken);
+        return this.GetAsync<ChatModel[]>(actorId, "api/chats", cancellationToken);
     }
 
-    public Task<MessageResponse> GetMessageAsync(Guid actorId, Guid chatId, Guid messageId, CancellationToken cancellationToken)
+    public Task<ChatModel> GetChatAsync(Guid actorId, Guid chatId, CancellationToken cancellationToken)
+    {
+        EnsureArg.IsNotDefault(actorId, nameof(actorId));
+        EnsureArg.IsNotDefault(chatId, nameof(chatId));
+
+        return this.GetAsync<ChatModel>(actorId, $"api/chats/{chatId}", cancellationToken);
+    }
+
+    // Messages endpoints
+    public Task<MessageModel[]> ListMessagesAsync(Guid actorId, Guid chatId, CancellationToken cancellationToken)
+    {
+        EnsureArg.IsNotDefault(actorId, nameof(actorId));
+        EnsureArg.IsNotDefault(chatId, nameof(chatId));
+
+        return this.GetAsync<MessageModel[]>(actorId, $"api/chats/{chatId}/messages", cancellationToken);
+    }
+
+    public Task<MessageModel> GetMessageAsync(Guid actorId, Guid chatId, Guid messageId, CancellationToken cancellationToken)
     {
         EnsureArg.IsNotDefault(actorId, nameof(actorId));
         EnsureArg.IsNotDefault(chatId, nameof(chatId));
         EnsureArg.IsNotDefault(messageId, nameof(messageId));
 
-        return this.GetAsync<MessageResponse>(actorId, $"api/chats/{chatId}/messages/{messageId}", cancellationToken);
+        return this.GetAsync<MessageModel>(actorId, $"api/chats/{chatId}/messages/{messageId}", cancellationToken);
     }
 
+    // Helper methods
     private Task<TResponse> PostAsync<TRequest, TResponse>(
         Guid actorId,
         string url,
@@ -102,9 +103,6 @@ public sealed class WebClient : IWebClient
         return this.PostAsync<TResponse>(actorId, url, content, cancellationToken);
     }
 
-    private Task<TResponse> PostAsync<TResponse>(Guid actorId, string url, CancellationToken cancellationToken)
-        => this.PostAsync<TResponse>(actorId, url, content: null, cancellationToken);
-
     private Task<TResponse> PostAsync<TRequest, TResponse>(
         string url,
         TRequest request,
@@ -116,10 +114,7 @@ public sealed class WebClient : IWebClient
         return this.PostAsync<TResponse>(actorId: null, url, content, cancellationToken);
     }
 
-    private Task<TResponse> PostAsync<TResponse>(string url, CancellationToken cancellationToken)
-        => this.PostAsync<TResponse>(actorId: null, url, content: null, cancellationToken);
-
-    private async Task<TResponse> PostAsync<TResponse>(Guid? actorId, string url, HttpContent? content, CancellationToken cancellationToken)
+    private async Task<TResponse> PostAsync<TResponse>(Guid? actorId, string url, HttpContent content, CancellationToken cancellationToken)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, url);
 
@@ -128,15 +123,12 @@ public sealed class WebClient : IWebClient
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", actorId.ToString());
         }
 
-        if (content != null)
-        {
-            request.Content = content;
-        }
+        request.Content = content;
 
-        var response = await this.httpClient.SendAsync(request, cancellationToken);
+        var response = await this.httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
-        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
         return JsonConvert.DeserializeObject<TResponse>(responseContent, this.jsonSettings)!;
     }
 
@@ -144,10 +136,10 @@ public sealed class WebClient : IWebClient
     {
         EnsureArg.IsNotNullOrWhiteSpace(url, nameof(url));
 
-        var response = await this.httpClient.GetAsync(url, cancellationToken);
+        var response = await this.httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
-        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
         return JsonConvert.DeserializeObject<TResponse>(responseContent, this.jsonSettings)!;
     }
 
@@ -159,10 +151,10 @@ public sealed class WebClient : IWebClient
         var request = new HttpRequestMessage(HttpMethod.Get, url);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", actorId.ToString());
 
-        var response = await this.httpClient.SendAsync(request, cancellationToken);
+        var response = await this.httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
-        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
         return JsonConvert.DeserializeObject<TResponse>(responseContent, this.jsonSettings)!;
     }
 

@@ -25,12 +25,14 @@ public sealed class ChatsReadOnlyRepository : IChatsReadOnlyRepository
     {
         EnsureArg.IsNotDefault(userId, nameof(userId));
 
-        return await this.dbContext.Chats
+        var result = await this.dbContext.Chats
             .AsNoTracking()
             .Include(chat => chat.Users)
             .Where(chat => chat.Users.Any(user => user.Id == userId))
             .Select(chat => chat.ToModel())
-            .ToArrayAsync(cancellationToken);
+            .ToListAsync(cancellationToken);
+
+        return result.ToArray();
     }
 
     public async Task<bool> IsUserInChatAsync(Guid userId, Guid chatId, CancellationToken cancellationToken)

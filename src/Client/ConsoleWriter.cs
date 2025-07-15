@@ -1,18 +1,17 @@
 using System;
 using System.Linq;
-using Client.Web.Models;
+using Client.Models;
 using EnsureThat;
 
 namespace Client;
 
 public static class ConsoleWriter
 {
-    public static void OpenChat(ChatResponse chat)
+    public static void OpenChat(ChatModel chat)
     {
         EnsureArg.IsNotNull(chat, nameof(chat));
 
         Console.WriteLine($"Opening chat with ID: {chat.Id}");
-        Console.WriteLine($"Chat Type: {chat.ChatType}");
         Console.WriteLine("Users in this chat:");
         foreach (var user in chat.Users)
         {
@@ -20,24 +19,15 @@ public static class ConsoleWriter
         }
     }
 
-    public static void ListMessages(MessageResponse[] messages)
+    public static void WriteMessage(UserModel user, MessageModel message)
     {
-        EnsureArg.IsNotNull(messages, nameof(messages));
-
-        foreach (var message in messages)
-        {
-            WriteMessage(message);
-        }
-    }
-
-    public static void WriteMessage(MessageResponse message)
-    {
+        EnsureArg.IsNotNull(user, nameof(user));
         EnsureArg.IsNotNull(message, nameof(message));
 
-        Console.WriteLine($"[{message.CreatedAt}] {message.Content}");
+        Console.WriteLine($"[{message.CreatedAt}] {user.UserName}: {message.Content}");
     }
 
-    public static void ListChats(ChatResponse[] chats)
+    public static void ListChats(ChatModel[] chats)
     {
         EnsureArg.IsNotNull(chats, nameof(chats));
 
@@ -50,7 +40,7 @@ public static class ConsoleWriter
         Console.WriteLine("Available Chats:");
         foreach (var chat in chats)
         {
-            Console.WriteLine($"{chat.ChatType}: {string.Join(", ", chat.Users.Select(user => user.UserName))}; (ID: {chat.Id})");
+            Console.WriteLine($"(ID: {chat.Id}); {string.Join(", ", chat.Users.Select(user => user.UserName))}");
         }
     }
 

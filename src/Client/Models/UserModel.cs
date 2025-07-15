@@ -1,8 +1,8 @@
 using System;
 
-namespace Client.Web.Models;
+namespace Client.Models;
 
-public sealed record UserResponse
+public sealed record UserModel
 {
     public required Guid Id { get; init; }
     public required string UserName { get; init; }

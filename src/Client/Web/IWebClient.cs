@@ -1,18 +1,19 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Client.Models;
 using Client.Web.Models;
 
 namespace Client.Web;
 
 public interface IWebClient : IAsyncDisposable
 {
-    Task<EntityCreatedResponse> CreateUserAsync(string userName, CancellationToken cancellationToken);
-    Task<UserResponse[]> ListUsersAsync(CancellationToken cancellationToken);
-    Task<UserResponse> GetUserAsync(Guid userId, CancellationToken cancellationToken);
-    Task<EntityCreatedResponse> CreatePrivateChatAsync(Guid actorId, CreatePrivateChatRequest request, CancellationToken cancellationToken);
-    Task<ChatResponse[]> ListChatsAsync(Guid actorId, CancellationToken cancellationToken);
-    Task<ChatResponse> GetChatAsync(Guid chatId, Guid userId, CancellationToken cancellationToken);
-    Task<MessageResponse[]> ListMessagesAsync(Guid actorId, Guid chatId, CancellationToken cancellationToken);
-    Task<MessageResponse> GetMessageAsync(Guid actorId, Guid chatId, Guid messageId, CancellationToken cancellationToken);
+    Task<UserModel> CreateUserAsync(string userName, CancellationToken cancellationToken);
+    Task<UserModel[]> ListUsersAsync(CancellationToken cancellationToken);
+    Task<UserModel> GetUserAsync(Guid userId, CancellationToken cancellationToken);
+    Task<ChatModel> CreatePrivateChatAsync(Guid actorId, CreatePrivateChatRequest request, CancellationToken cancellationToken);
+    Task<ChatModel[]> ListChatsAsync(Guid actorId, CancellationToken cancellationToken);
+    Task<ChatModel> GetChatAsync(Guid actorId, Guid chatId, CancellationToken cancellationToken);
+    Task<MessageModel[]> ListMessagesAsync(Guid actorId, Guid chatId, CancellationToken cancellationToken);
+    Task<MessageModel> GetMessageAsync(Guid actorId, Guid chatId, Guid messageId, CancellationToken cancellationToken);
 }

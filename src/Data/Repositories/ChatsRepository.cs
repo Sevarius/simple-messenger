@@ -74,10 +74,12 @@ public sealed class ChatsRepository : IChatsRepository
     {
         EnsureArg.IsNotDefault(userId, nameof(userId));
 
-        return await this.dbContext.Chats
+        var result = await this.dbContext.Chats
             .Include(chat => chat.Users)
             .Where(chat => chat.Users.Any(user => user.Id == userId))
-            .ToArrayAsync(cancellationToken);
+            .ToListAsync(cancellationToken);
+
+        return result.ToArray();
     }
 
     public void Insert(Chat chat)

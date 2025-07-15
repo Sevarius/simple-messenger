@@ -47,10 +47,12 @@ public sealed class MessagesRepository : IMessagesRepository
     {
         EnsureArg.IsNotDefault(chatId, nameof(chatId));
 
-        return await this.dbContext.Messages
+        var result = await this.dbContext.Messages
             .Where(message => message.ChatId == chatId && !message.IsDeleted)
             .OrderBy(message => message.CreatedAt)
-            .ToArrayAsync(cancellationToken);
+            .ToListAsync(cancellationToken);
+
+        return result.ToArray();
     }
 
     public void Insert(Message message)

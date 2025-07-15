@@ -38,11 +38,13 @@ public sealed class MessagesReadOnlyRepository : IMessagesReadOnlyRepository
     {
         EnsureArg.IsNotDefault(chatId, nameof(chatId));
 
-        return await this.dbContext.Messages
+        var result = await this.dbContext.Messages
             .AsNoTracking()
             .Where(message => message.ChatId == chatId && !message.IsDeleted)
             .OrderBy(message => message.CreatedAt)
             .Select(message => message.ToModel())
-            .ToArrayAsync(cancellationToken);
+            .ToListAsync(cancellationToken);
+
+        return result.ToArray();
     }
 }

@@ -1,6 +1,8 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Client.Models;
 using Client.SignalR;
 using Client.Web;
 using Client.Web.Models;
@@ -22,8 +24,8 @@ internal sealed class UserService : IAsyncDisposable
     private readonly string signalRUrl;
     private readonly IWebClient webClient;
     private MessagesSignalRClient messagesSignalRClient = null!;
-    private Guid currentChatId = Guid.Empty;
-    private Guid currentUserId = Guid.Empty;
+    private ChatModel currentChat = null!;
+    private UserModel currentUser = null!;
 
     public async Task SignInAsync(Guid userId, CancellationToken cancellationToken)
     {
@@ -32,7 +34,8 @@ internal sealed class UserService : IAsyncDisposable
         this.messagesSignalRClient = new MessagesSignalRClient(userId, this.signalRUrl);
         await this.messagesSignalRClient.ConnectAsync(cancellationToken);
         this.messagesSignalRClient.OnMessageReceived = this.MessageReceivedAsync;
-        this.currentUserId = userId;
+
+        this.currentUser = await this.webClient.GetUserAsync(userId, cancellationToken);
     }
 
     public async Task SignOut(CancellationToken cancellationToken)
@@ -40,31 +43,29 @@ internal sealed class UserService : IAsyncDisposable
         await this.messagesSignalRClient.DisconnectAsync(cancellationToken);
         await this.messagesSignalRClient.DisposeAsync();
         this.messagesSignalRClient = null!;
+        this.currentUser = null!;
     }
 
     public async Task CreateChatAsync(Guid interlocutorId, CancellationToken cancellationToken)
     {
         EnsureArg.IsNotEmpty(interlocutorId, nameof(interlocutorId));
 
-        var chatId = await this.webClient.CreatePrivateChatAsync(
-            this.currentUserId,
+        var chat = await this.webClient.CreatePrivateChatAsync(
+            this.currentUser.Id,
             new CreatePrivateChatRequest
                 {
                     InterlocutorId = interlocutorId
                 },
             cancellationToken);
 
-        var chat = await this.webClient.GetChatAsync(chatId.Id, this.currentUserId, cancellationToken);
         ConsoleWriter.OpenChat(chat);
 
-        this.currentChatId = chat.Id;
+        this.currentChat = chat;
     }
 
     public async Task ListChats(CancellationToken cancellationToken)
     {
-        EnsureArg.IsNotEmpty(this.currentChatId, nameof(this.currentChatId));
-
-        var chats = await this.webClient.ListChatsAsync(this.currentUserId, cancellationToken);
+        var chats = await this.webClient.ListChatsAsync(this.currentUser.Id, cancellationToken);
 
         ConsoleWriter.ListChats(chats);
     }
@@ -73,27 +74,29 @@ internal sealed class UserService : IAsyncDisposable
     {
         EnsureArg.IsNotEmpty(chatId, nameof(chatId));
 
-        var chat = await this.webClient.GetChatAsync(chatId, this.currentUserId, cancellationToken);
+        var chat = await this.webClient.GetChatAsync(this.currentUser.Id, chatId, cancellationToken);
         ConsoleWriter.OpenChat(chat);
 
-        var messages = await this.webClient.ListMessagesAsync(this.currentUserId, chatId, cancellationToken);
-        ConsoleWriter.ListMessages(messages);
+        this.currentChat = chat;
 
-        this.currentChatId = chatId;
+        var messages = await this.webClient.ListMessagesAsync(this.currentUser.Id, chatId, cancellationToken);
+
+        foreach (var message in messages)
+        {
+            ConsoleWriter.WriteMessage(this.GetUser(message.UserId), message);
+        }
     }
 
     public async Task CloseChat(CancellationToken cancellationToken)
     {
-        EnsureArg.IsNotEmpty(this.currentChatId, nameof(this.currentChatId));
-
-        this.currentChatId = Guid.Empty;
+        this.currentChat = null!;
     }
 
     public async Task SendMessage(string message, CancellationToken cancellationToken)
     {
         EnsureArg.IsNotNullOrWhiteSpace(message, nameof(message));
 
-        await this.messagesSignalRClient.SendMessageAsync(this.currentChatId, message, cancellationToken);
+        await this.messagesSignalRClient.SendMessageAsync(this.currentChat.Id, message, cancellationToken);
 
         Console.WriteLine(message);
     }
@@ -104,16 +107,15 @@ internal sealed class UserService : IAsyncDisposable
         await this.webClient.DisposeAsync();
     }
 
-    public async Task MessageReceivedAsync(Guid messageId, Guid chatId, CancellationToken cancellationToken)
+    private async Task MessageReceivedAsync(MessageModel message)
     {
-        EnsureArg.IsNotEmpty(messageId, nameof(messageId));
-        EnsureArg.IsNotEmpty(chatId, nameof(chatId));
+        EnsureArg.IsNotNull(message, nameof(message));
 
-        if (this.currentChatId == chatId)
+        if (this.currentChat.Id == message.ChatId)
         {
-            var message = await this.webClient.GetMessageAsync(this.currentUserId, this.currentChatId, messageId, cancellationToken);
-
-            ConsoleWriter.WriteMessage(message);
+            ConsoleWriter.WriteMessage(this.GetUser(message.ChatId), message);
         }
     }
+
+    private UserModel GetUser(Guid userId) => this.currentChat.Users.Single(user => user.Id == userId);
 }

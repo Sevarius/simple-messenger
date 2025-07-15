@@ -45,7 +45,7 @@ internal sealed class CreateMessageHandler : IRequestHandler<CreateMessage, Mess
             throw new ApplicationException("User is not a member of the chat.");
         }
 
-        var message = new Message(command.ActorId, command.ChatId, command.Content);
+        var message = new Message(command.ChatId, command.ActorId, command.Content);
 
         this.messagesRepository.Insert(message);
 

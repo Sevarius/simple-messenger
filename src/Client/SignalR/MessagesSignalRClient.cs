@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Client.Models;
 using EnsureThat;
 using Microsoft.AspNetCore.SignalR.Client;
 using Serilog;
@@ -23,16 +24,16 @@ internal sealed class MessagesSignalRClient : IAsyncDisposable
             .WithAutomaticReconnect()
             .Build();
 
-        this.connection.On<Guid, Guid, CancellationToken>("ReceiveMessage", async (messageId, chatId, cancellationToken) =>
+        this.connection.On<MessageModel>("ReceiveMessage", async (message) =>
         {
-            await this.OnMessageReceived.Invoke(messageId, chatId, cancellationToken);
+            await this.OnMessageReceived.Invoke(message);
         });
     }
 
     private readonly HubConnection connection;
     private static readonly ILogger Logger = Log.ForContext<MessagesSignalRClient>();
 
-    public Func<Guid,Guid,CancellationToken,Task> OnMessageReceived { get; set; } = (_, _, _) => Task.CompletedTask;
+    public Func<MessageModel,Task> OnMessageReceived { get; set; } = (_) => Task.CompletedTask;
 
     public async Task ConnectAsync(CancellationToken cancellationToken)
     {

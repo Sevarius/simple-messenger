@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using EnsureThat;
 
@@ -6,6 +7,7 @@ namespace Domain.Entities;
 public abstract class Chat : Entity
 {
     protected Chat(User[] users)
+        : base(Guid.NewGuid())
     {
         EnsureArg.IsNotNull(users, nameof(users));
         EnsureArg.HasItems(users, nameof(users));
