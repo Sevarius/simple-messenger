@@ -1,15 +1,14 @@
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Application.Repositories;
 using Application.Users.Queries;
-using Domain.Entities;
 using EnsureThat;
 using MediatR;
+using Models;
 
 namespace Application.Users.QueryHandlers;
 
-internal sealed class ListUsersHandler : IRequestHandler<ListUsers, IReadOnlyList<User>>
+internal sealed class ListUsersHandler : IRequestHandler<ListUsers, UserModel[]>
 {
     public ListUsersHandler(IUsersReadOnlyRepository usersReadonlyRepository)
     {
@@ -20,7 +19,7 @@ internal sealed class ListUsersHandler : IRequestHandler<ListUsers, IReadOnlyLis
 
     private readonly IUsersReadOnlyRepository usersReadonlyRepository;
 
-    public async Task<IReadOnlyList<User>> Handle(ListUsers query, CancellationToken cancellationToken)
+    public async Task<UserModel[]> Handle(ListUsers query, CancellationToken cancellationToken)
     {
         EnsureArg.IsNotNull(query, nameof(query));
 

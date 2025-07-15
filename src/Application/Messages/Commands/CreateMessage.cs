@@ -1,10 +1,11 @@
 using System;
 using EnsureThat;
 using MediatR;
+using Models;
 
 namespace Application.Messages.Commands;
 
-public sealed record CreateMessage : IRequest<Guid>
+public sealed record CreateMessage : IRequest<MessageModel>
 {
     public CreateMessage(Guid actorId, Guid chatId, string content)
     {

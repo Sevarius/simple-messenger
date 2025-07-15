@@ -1,12 +1,11 @@
 using System;
-using System.Collections.Generic;
-using Domain.Entities;
 using EnsureThat;
 using MediatR;
+using Models;
 
 namespace Application.Chats.Queries;
 
-public sealed record ListChats : IRequest<IReadOnlyList<Chat>>
+public sealed record ListChats : IRequest<ChatModel[]>
 {
     public ListChats(Guid userId)
     {
@@ -16,4 +15,4 @@ public sealed record ListChats : IRequest<IReadOnlyList<Chat>>
     }
 
     public Guid UserId { get; }
-} 
+}

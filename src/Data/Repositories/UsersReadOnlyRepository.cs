@@ -1,12 +1,12 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Application.Mappings;
 using Application.Repositories;
-using Domain.Entities;
 using EnsureThat;
 using Microsoft.EntityFrameworkCore;
+using Models;
 
 namespace Data.Repositories;
 
@@ -21,22 +21,23 @@ public sealed class UsersReadOnlyRepository : IUsersReadOnlyRepository
 
     private readonly MessengerDbContext dbContext;
 
-    public async Task<IReadOnlyList<User>> ListAsync(CancellationToken cancellationToken)
-        => await this.dbContext.Users
-        .AsNoTracking()
-        .Where(user => !user.IsDeleted)
-        .OrderBy(user => user.UserName)
-        .ToListAsync(cancellationToken);
+    public Task<UserModel[]> ListAsync(CancellationToken cancellationToken)
+    {
+        return this.dbContext.Users
+            .AsNoTracking()
+            .OrderBy(user => user.UserName)
+            .Select(user => user.ToModel())
+            .ToArrayAsync(cancellationToken);
+    }
 
-    public async Task<User> GetAsync(Guid userId, CancellationToken cancellationToken)
+    public async Task<UserModel> GetAsync(Guid userId, CancellationToken cancellationToken)
     {
         EnsureArg.IsNotDefault(userId, nameof(userId));
 
-        var user = await this.dbContext.Users
+        return await this.dbContext.Users
             .AsNoTracking()
-            .SingleOrDefaultAsync(user => user.Id == userId && !user.IsDeleted, cancellationToken)
+            .Select(user => user.ToModel())
+            .SingleOrDefaultAsync(user => user.Id == userId, cancellationToken)
             ?? throw new InvalidOperationException($"User with ID {userId} not found.");
-
-        return user;
     }
 }

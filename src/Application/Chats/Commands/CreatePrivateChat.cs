@@ -1,10 +1,11 @@
 using System;
 using EnsureThat;
 using MediatR;
+using Models;
 
 namespace Application.Chats.Commands;
 
-public sealed record CreatePrivateChat : IRequest<Guid>
+public sealed record CreatePrivateChat : IRequest<ChatModel>
 {
     public CreatePrivateChat(Guid actorId, Guid interlocutorId)
     {

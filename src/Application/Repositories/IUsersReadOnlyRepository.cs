@@ -1,14 +1,13 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Domain.Entities;
+using Models;
 
 namespace Application.Repositories;
 
 public interface IUsersReadOnlyRepository
 {
-    Task<IReadOnlyList<User>> ListAsync(CancellationToken cancellationToken);
+    Task<UserModel[]> ListAsync(CancellationToken cancellationToken);
 
-    Task<User> GetAsync(Guid userId, CancellationToken cancellationToken);
+    Task<UserModel> GetAsync(Guid userId, CancellationToken cancellationToken);
 }

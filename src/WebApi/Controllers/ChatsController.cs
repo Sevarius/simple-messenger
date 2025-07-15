@@ -8,7 +8,7 @@ using Application.Chats.Queries;
 using EnsureThat;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using WebApi.Models;
+using Models;
 using WebApi.Transfers;
 
 namespace WebApi.Controllers;
@@ -27,38 +27,27 @@ public class ChatsController : ControllerBase
     private readonly IMediator mediator;
 
     [HttpPost]
-    public async Task<EntityCreatedResponse> CreateChatAsync(
+    public Task<ChatModel> CreateChatAsync(
         [FromBody] CreatePrivateChatTransfer transfer,
         CancellationToken cancellationToken)
     {
         EnsureArg.IsNotNull(transfer, nameof(transfer));
 
-        var chatId = await this.mediator.Send(new CreatePrivateChat(this.ActorId, transfer.InterlocutorId), cancellationToken);
-
-        return new EntityCreatedResponse
-        {
-            Id = chatId,
-        };
+        return this.mediator.Send(new CreatePrivateChat(this.ActorId, transfer.InterlocutorId), cancellationToken);
     }
 
     [HttpGet]
-    public async Task<ChatResponse[]> ListChatsAsync(CancellationToken cancellationToken)
-    {
-        var chats = await this.mediator.Send(new ListChats(this.ActorId), cancellationToken);
-
-        return chats.Select(ChatResponse.From).ToArray();
-    }
+    public Task<ChatModel[]> ListChatsAsync(CancellationToken cancellationToken)
+        => this.mediator.Send(new ListChats(this.ActorId), cancellationToken);
 
     [HttpGet("{chatId}")]
-    public async Task<ChatResponse> GetChatAsync(
+    public Task<ChatModel> GetChatAsync(
         [FromRoute] Guid chatId,
         CancellationToken cancellationToken)
     {
         EnsureArg.IsNotDefault(chatId, nameof(chatId));
 
-        var chat = await this.mediator.Send(new GetChat(chatId, this.ActorId), cancellationToken);
-
-        return ChatResponse.From(chat);
+        return this.mediator.Send(new GetChat(this.ActorId, chatId), cancellationToken);
     }
 
     private Guid ActorId => Guid.Parse(this.User!.Claims.First(claim => claim.Type == ClaimTypes.Sid).Value);

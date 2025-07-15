@@ -24,15 +24,15 @@ internal sealed class MessagesHub : Hub
 
     public async Task SendMessage(Guid chatId, string content)
     {
-        var userId = GetUserId(this.Context);
+        var actorId = GetUserId(this.Context);
 
-        var messageId = await this.mediator.Send(
-                new CreateMessage(userId, chatId, content),
+        var messageModel = await this.mediator.Send(
+                new CreateMessage(actorId, chatId, content),
                 this.Context.ConnectionAborted)
             .ConfigureAwait(false);
 
-        await this.Clients.Group(userId.ToString())
-            .SendAsync("ReceiveMessage", messageId, chatId)
+        await this.Clients.Group(actorId.ToString())
+            .SendAsync("ReceiveMessage", messageModel)
             .ConfigureAwait(false);
     }
 

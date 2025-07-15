@@ -1,11 +1,11 @@
 using System;
-using Domain.Entities;
 using EnsureThat;
 using MediatR;
+using Models;
 
 namespace Application.Users.Queries;
 
-public sealed record GetUser : IRequest<User>
+public sealed record GetUser : IRequest<UserModel>
 {
     public GetUser(Guid userId)
     {
@@ -15,4 +15,4 @@ public sealed record GetUser : IRequest<User>
     }
 
     public Guid UserId { get; }
-} 
+}

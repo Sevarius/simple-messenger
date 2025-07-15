@@ -2,15 +2,17 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Application.Mappings;
 using Application.Messages.Commands;
 using Application.Repositories;
 using Domain.Entities;
 using EnsureThat;
 using MediatR;
+using Models;
 
 namespace Application.Messages.CommandHandlers;
 
-internal sealed class CreateMessageHandler : IRequestHandler<CreateMessage, Guid>
+internal sealed class CreateMessageHandler : IRequestHandler<CreateMessage, MessageModel>
 {
     public CreateMessageHandler(
         IUsersRepository usersRepository,
@@ -30,7 +32,7 @@ internal sealed class CreateMessageHandler : IRequestHandler<CreateMessage, Guid
     private readonly IChatsRepository chatsRepository;
     private readonly IMessagesRepository messagesRepository;
 
-    public async Task<Guid> Handle(CreateMessage command, CancellationToken cancellationToken)
+    public async Task<MessageModel> Handle(CreateMessage command, CancellationToken cancellationToken)
     {
         EnsureArg.IsNotNull(command, nameof(command));
 
@@ -49,6 +51,6 @@ internal sealed class CreateMessageHandler : IRequestHandler<CreateMessage, Guid
 
         await this.messagesRepository.SaveChangesAsync(cancellationToken);
 
-        return message.Id;
+        return message.ToModel();
     }
 }

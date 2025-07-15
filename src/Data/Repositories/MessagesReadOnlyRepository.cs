@@ -1,12 +1,12 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Application.Mappings;
 using Application.Repositories;
-using Domain.Entities;
 using EnsureThat;
 using Microsoft.EntityFrameworkCore;
+using Models;
 
 namespace Data.Repositories;
 
@@ -21,19 +21,20 @@ public sealed class MessagesReadOnlyRepository : IMessagesReadOnlyRepository
 
     private readonly MessengerDbContext dbContext;
 
-    public async Task<Message> GetAsync(Guid chatId, Guid messageId, CancellationToken cancellationToken)
+    public async Task<MessageModel> GetAsync(Guid chatId, Guid messageId, CancellationToken cancellationToken)
     {
         EnsureArg.IsNotDefault(chatId, nameof(chatId));
         EnsureArg.IsNotDefault(messageId, nameof(messageId));
 
         return await this.dbContext.Messages
             .AsNoTracking()
-            .Where(message => message.ChatId == chatId && message.Id == messageId && !message.IsDeleted)
-            .FirstOrDefaultAsync(cancellationToken)
+            .Where(message => message.ChatId == chatId && message.Id == messageId)
+            .Select(message => message.ToModel())
+            .SingleOrDefaultAsync(cancellationToken)
             ?? throw new InvalidOperationException($"Message with ID {messageId} not found in chat {chatId}.");
     }
 
-    public async Task<IReadOnlyList<Message>> ListAsync(Guid chatId, CancellationToken cancellationToken)
+    public async Task<MessageModel[]> ListAsync(Guid chatId, CancellationToken cancellationToken)
     {
         EnsureArg.IsNotDefault(chatId, nameof(chatId));
 
@@ -41,6 +42,7 @@ public sealed class MessagesReadOnlyRepository : IMessagesReadOnlyRepository
             .AsNoTracking()
             .Where(message => message.ChatId == chatId && !message.IsDeleted)
             .OrderBy(message => message.CreatedAt)
-            .ToListAsync(cancellationToken);
+            .Select(message => message.ToModel())
+            .ToArrayAsync(cancellationToken);
     }
 }

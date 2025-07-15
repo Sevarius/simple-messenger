@@ -2,13 +2,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Application.Repositories;
 using Application.Users.Queries;
-using Domain.Entities;
 using EnsureThat;
 using MediatR;
+using Models;
 
 namespace Application.Users.QueryHandlers;
 
-internal sealed class GetUserHandler : IRequestHandler<GetUser, User>
+internal sealed class GetUserHandler : IRequestHandler<GetUser, UserModel>
 {
     public GetUserHandler(IUsersReadOnlyRepository usersReadOnlyRepository)
     {
@@ -19,10 +19,10 @@ internal sealed class GetUserHandler : IRequestHandler<GetUser, User>
 
     private readonly IUsersReadOnlyRepository usersReadOnlyRepository;
 
-    public async Task<User> Handle(GetUser query, CancellationToken cancellationToken)
+    public async Task<UserModel> Handle(GetUser query, CancellationToken cancellationToken)
     {
         EnsureArg.IsNotNull(query, nameof(query));
 
         return await this.usersReadOnlyRepository.GetAsync(query.UserId, cancellationToken);
     }
-} 
+}

@@ -1,15 +1,16 @@
-using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Application.Mappings;
 using Application.Repositories;
 using Application.Users.Commands;
 using Domain.Entities;
 using EnsureThat;
 using MediatR;
+using Models;
 
 namespace Application.Users.CommandHandlers;
 
-internal sealed class CreateUserHandler : IRequestHandler<CreateUser, Guid>
+internal sealed class CreateUserHandler : IRequestHandler<CreateUser, UserModel>
 {
     public CreateUserHandler(IUsersRepository usersRepository)
     {
@@ -20,7 +21,7 @@ internal sealed class CreateUserHandler : IRequestHandler<CreateUser, Guid>
 
     private readonly IUsersRepository usersRepository;
 
-    public async Task<Guid> Handle(CreateUser command, CancellationToken cancellationToken)
+    public async Task<UserModel> Handle(CreateUser command, CancellationToken cancellationToken)
     {
         EnsureArg.IsNotNull(command, nameof(command));
 
@@ -30,6 +31,6 @@ internal sealed class CreateUserHandler : IRequestHandler<CreateUser, Guid>
 
         await this.usersRepository.SaveChangesAsync(cancellationToken);
 
-        return user.Id;
+        return user.ToModel();
     }
 }

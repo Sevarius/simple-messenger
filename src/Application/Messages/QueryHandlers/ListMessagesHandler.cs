@@ -1,16 +1,15 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Application.Messages.Queries;
 using Application.Repositories;
-using Domain.Entities;
 using EnsureThat;
 using MediatR;
+using Models;
 
 namespace Application.Messages.QueryHandlers;
 
-internal sealed class ListMessagesHandler : IRequestHandler<ListMessages, IReadOnlyList<Message>>
+internal sealed class ListMessagesHandler : IRequestHandler<ListMessages, MessageModel[]>
 {
     public ListMessagesHandler(
         IMessagesReadOnlyRepository messagesReadOnlyRepository,
@@ -26,7 +25,7 @@ internal sealed class ListMessagesHandler : IRequestHandler<ListMessages, IReadO
     private readonly IMessagesReadOnlyRepository messagesReadOnlyRepository;
     private readonly IChatsReadOnlyRepository chatsReadOnlyRepository;
 
-    public async Task<IReadOnlyList<Message>> Handle(ListMessages query, CancellationToken cancellationToken)
+    public async Task<MessageModel[]> Handle(ListMessages query, CancellationToken cancellationToken)
     {
         EnsureArg.IsNotNull(query, nameof(query));
 

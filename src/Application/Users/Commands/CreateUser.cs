@@ -1,10 +1,10 @@
-using System;
 using EnsureThat;
 using MediatR;
+using Models;
 
 namespace Application.Users.Commands;
 
-public sealed record CreateUser : IRequest<Guid>
+public sealed record CreateUser : IRequest<UserModel>
 {
     public CreateUser(string userName)
     {

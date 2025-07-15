@@ -1,7 +1,6 @@
-using System.Collections.Generic;
-using Domain.Entities;
 using MediatR;
+using Models;
 
 namespace Application.Users.Queries;
 
-public sealed record ListUsers : IRequest<IReadOnlyList<User>>;
+public sealed record ListUsers : IRequest<UserModel[]>;

@@ -1,0 +1,6 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+When creating or modifying files, always ensure there is exactly one empty line at the end of each file. This follows coding standards and helps with clean diffs in version control systems.

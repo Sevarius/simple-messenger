@@ -1,22 +1,21 @@
 using System;
-using System.Collections.Generic;
-using Domain.Entities;
 using EnsureThat;
 using MediatR;
+using Models;
 
 namespace Application.Messages.Queries;
 
-public sealed record ListMessages : IRequest<IReadOnlyList<Message>>
+public sealed record ListMessages : IRequest<MessageModel[]>
 {
-    public ListMessages(Guid chatId, Guid actorId)
+    public ListMessages(Guid actorId, Guid chatId)
     {
-        EnsureArg.IsNotDefault(chatId, nameof(chatId));
         EnsureArg.IsNotDefault(actorId, nameof(actorId));
+        EnsureArg.IsNotDefault(chatId, nameof(chatId));
 
-        this.ChatId = chatId;
         this.ActorId = actorId;
+        this.ChatId = chatId;
     }
 
-    public Guid ChatId { get; }
     public Guid ActorId { get; }
-} 
+    public Guid ChatId { get; }
+}

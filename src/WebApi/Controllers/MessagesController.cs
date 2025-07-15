@@ -7,7 +7,7 @@ using Application.Messages.Queries;
 using EnsureThat;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using WebApi.Models;
+using Models;
 
 namespace WebApi.Controllers;
 
@@ -25,7 +25,7 @@ public class MessagesController : ControllerBase
     private readonly IMediator mediator;
 
     [HttpGet("{messageId:guid}")]
-    public async Task<MessageResponse> GetMessageAsync(
+    public Task<MessageModel> GetMessageAsync(
         [FromRoute] Guid chatId,
         [FromRoute] Guid messageId,
         CancellationToken cancellationToken)
@@ -33,22 +33,18 @@ public class MessagesController : ControllerBase
         EnsureArg.IsNotDefault(chatId, nameof(chatId));
         EnsureArg.IsNotDefault(messageId, nameof(messageId));
 
-        var message = await this.mediator.Send(new GetMessage(chatId, messageId, this.ActorId), cancellationToken);
-
-        return MessageResponse.From(message);
+        return this.mediator.Send(new GetMessage(this.ActorId, chatId, messageId), cancellationToken);
     }
 
     [HttpGet]
-    public async Task<MessageResponse[]> ListMessagesAsync(
+    public Task<MessageModel[]> ListMessagesAsync(
         [FromRoute] Guid chatId,
         CancellationToken cancellationToken)
     {
         EnsureArg.IsNotDefault(chatId, nameof(chatId));
         EnsureArg.IsNotDefault(this.ActorId, nameof(this.ActorId));
 
-        var messages = await this.mediator.Send(new ListMessages(chatId, this.ActorId), cancellationToken);
-
-        return messages.Select(MessageResponse.From).ToArray();
+        return this.mediator.Send(new ListMessages(this.ActorId, chatId), cancellationToken);
     }
 
     private Guid ActorId => Guid.Parse(this.User!.Claims.First(claim => claim.Type == ClaimTypes.Sid).Value);

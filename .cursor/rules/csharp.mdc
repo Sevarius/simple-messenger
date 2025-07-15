@@ -1,0 +1,109 @@
+---
+description: 
+globs: *.cs
+alwaysApply: false
+---
+# C# Coding Standards
+
+## 1. Project Structure
+- **Layers**: Controllers → Application → Domain
+- **Principles**: YAGNI, SRP, Immutability where practical
+- **Access Modifiers**: Use the most restrictive (prefer `internal`)
+- **Commenting**: Avoid unnecessary XML docs. `TODO:` must reference a Jira ticket
+
+## 2. Naming Conventions
+- **Classes, Methods, Properties**: `PascalCase`
+- **Private Fields**: `camelCase`
+- **MediatR**: `{Command}` → `{Command}Handler`
+- **Domain Events**: Business-focused names for events and handlers
+
+## 3. File Layout
+- Constructors first
+- Static fields/consts
+- Instance fields
+- Properties
+- Methods (sorted: Public → Protected → Internal → Private)
+
+## 4. Guard Clauses
+- Use `EnsureArg` at the start of constructors/methods
+- Leave one blank line after guard clauses
+
+## 5. Collections & Arrays
+- Prefer `[]` over `Array.Empty<T>()`
+- New line braces `{ }` for empty classes and records
+
+## 6. Constructors & Dependency Injection
+- Inject dependencies via constructor; guard with `EnsureArg`
+- Use private readonly fields for services
+- Avoid private properties; use private fields
+- Boolean properties must start with `Is`, `Has`, or `Can`
+
+## 7. Methods
+- Async methods must end with `Async`
+- Always use `.ConfigureAwait(false)` in production code (except test projects)
+- Use `YieldTask()` instead of `Task.FromResult`
+- Use named arguments for booleans/nulls if it improves clarity
+
+## 8. Code Style
+- Always use braces `{}` even for single-line `if`, `for`, etc.
+- Break ternary operators into multiple lines if improves readability
+- Null checking: use `is null` or `?? throw`
+- Boolean checking: `if (list?.Any() == true)`
+- Line wrapping after 130 characters
+- Leave one empty line at end of file
+
+## 9. Lambda expressions
+- For single-parameter lambdas, omit the parentheses: `entity => entity.Property`.
+- **Reject any single-letter or 1-character name**; parameter names must be full, descriptive words (at least 2 characters) that reflect the collection element (e.g. `invoice`, `orderItem`, `userAccount`).
+- **AI enforcement**: any generated code must automatically rename `x => …`, `r => …`, etc. to a descriptive name derived from the target type.
+- Lambda parameters must reflect the entity they represent (e.g., `invoice`, `orderItem`, `userAccount`).
+
+## 10. Value Objects
+- Inherit from `ValueObject`
+- Use `[IncludeOrderInEquality]` and `[IgnoreDuplicatesInEquality]` for collections
+
+## 11. Solution & Project Files
+- Target framework: `net8.0`
+- Enable:
+  ```xml
+  <Nullable>enable</Nullable>
+  <WarningsAsErrors>nullable</WarningsAsErrors>
+  ```
+- Use new project GUIDs: `9A19103F-16F7-4668-BE54-9A1E7A4F7556`
+- RuntimeIdentifiers should be placed in the main `<PropertyGroup>`
+
+## 12. Azure Functions & Jobs
+- No infrastructure references inside FunctionApp projects
+- Use standard `host.json` with Application Insights sampling
+- Use `ConfigureFunctionsWorkerDefaults()` for startup configuration
+
+## 13. DTOs
+- Use auto-implemented properties
+- Apply `[Required(AllowEmptyStrings = false)]` where necessary
+- Keep `appsettings.json` keys sorted alphabetically
+
+## 14. Unit Tests
+- Follow MediatR testing conventions
+- Prefer returning specific types from handlers instead of `Unit`
+
+## 15. Logging & Exceptions
+- Logs:
+  ```csharp
+  Logger.LogInformation("Processed {Count}", count);
+  ```
+- Log templates: PascalCase placeholders, no trailing period
+- Exception messages: End with a period
+
+## 16. Smart Enums
+- Use **kebab-case** string values (e.g., `"in-progress"`)
+
+## 17. Terraform
+- Use **snake_case** for all resource names (e.g., `slack_app_postgres_configuration_pgbouncer`)
+
+---
+
+## ✅ Additional Notes
+- No `ConfigureAwait(false)` in unit tests
+- No environment-specific resource naming in application code
+- Consistent member ordering: constructor → fields → properties → methods
+- Consistent log formatting across layers

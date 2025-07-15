@@ -3,13 +3,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Application.Messages.Queries;
 using Application.Repositories;
-using Domain.Entities;
 using EnsureThat;
 using MediatR;
+using Models;
 
 namespace Application.Messages.QueryHandlers;
 
-internal sealed class GetMessageHandler : IRequestHandler<GetMessage, Message>
+internal sealed class GetMessageHandler : IRequestHandler<GetMessage, MessageModel>
 {
     public GetMessageHandler(
         IMessagesReadOnlyRepository messagesReadOnlyRepository,
@@ -25,7 +25,7 @@ internal sealed class GetMessageHandler : IRequestHandler<GetMessage, Message>
     private readonly IMessagesReadOnlyRepository messagesReadOnlyRepository;
     private readonly IChatsReadOnlyRepository chatsReadOnlyRepository;
 
-    public async Task<Message> Handle(GetMessage query, CancellationToken cancellationToken)
+    public async Task<MessageModel> Handle(GetMessage query, CancellationToken cancellationToken)
     {
         EnsureArg.IsNotNull(query, nameof(query));
 

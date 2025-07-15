@@ -1,24 +1,24 @@
 using System;
-using Domain.Entities;
 using EnsureThat;
 using MediatR;
+using Models;
 
 namespace Application.Messages.Queries;
 
-public sealed record GetMessage : IRequest<Message>
+public sealed record GetMessage : IRequest<MessageModel>
 {
-    public GetMessage(Guid chatId, Guid messageId, Guid actorId)
+    public GetMessage(Guid actorId, Guid chatId, Guid messageId)
     {
+        EnsureArg.IsNotDefault(actorId, nameof(actorId));
         EnsureArg.IsNotDefault(chatId, nameof(chatId));
         EnsureArg.IsNotDefault(messageId, nameof(messageId));
-        EnsureArg.IsNotDefault(actorId, nameof(actorId));
 
+        this.ActorId = actorId;
         this.ChatId = chatId;
         this.MessageId = messageId;
-        this.ActorId = actorId;
     }
 
+    public Guid ActorId { get; }
     public Guid ChatId { get; }
     public Guid MessageId { get; }
-    public Guid ActorId { get; }
 }

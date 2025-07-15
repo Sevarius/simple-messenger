@@ -1,15 +1,16 @@
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Application.Chats.Commands;
+using Application.Mappings;
 using Application.Repositories;
 using Domain.Entities;
 using EnsureThat;
 using MediatR;
+using Models;
 
 namespace Application.Chats.CommandHandlers;
 
-internal sealed class CreatePrivateChatHandler : IRequestHandler<CreatePrivateChat, Guid>
+internal sealed class CreatePrivateChatHandler : IRequestHandler<CreatePrivateChat, ChatModel>
 {
     public CreatePrivateChatHandler(IUsersRepository usersRepository, IChatsRepository chatsRepository)
     {
@@ -23,7 +24,7 @@ internal sealed class CreatePrivateChatHandler : IRequestHandler<CreatePrivateCh
     private readonly IUsersRepository usersRepository;
     private readonly IChatsRepository chatsRepository;
 
-    public async Task<Guid> Handle(CreatePrivateChat command, CancellationToken cancellationToken)
+    public async Task<ChatModel> Handle(CreatePrivateChat command, CancellationToken cancellationToken)
     {
         EnsureArg.IsNotNull(command, nameof(command));
 
@@ -36,6 +37,6 @@ internal sealed class CreatePrivateChatHandler : IRequestHandler<CreatePrivateCh
 
         await this.chatsRepository.SaveChangesAsync(cancellationToken);
 
-        return chat.Id;
+        return chat.ToModel();
     }
 }
