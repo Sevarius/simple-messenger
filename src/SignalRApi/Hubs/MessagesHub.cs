@@ -30,13 +30,64 @@ internal sealed class MessagesHub : Hub
 
         Logger.Information("SignalR: User {ActorId} sending message to chat {ChatId}", actorId, chatId);
 
-        var messageModel = await this.mediator.Send(
+        var messageAndChatModel = await this.mediator.Send(
                 new CreateMessage(actorId, chatId, content),
                 this.Context.ConnectionAborted);
 
-        await this.Clients.Group(actorId.ToString()).SendAsync("ReceiveMessage", messageModel);
+        var usersToNotify = messageAndChatModel.Chat.Users
+            .Where(user => user.Id != actorId)
+            .Select(user => user.Id.ToString())
+            .ToList();
 
-        Logger.Information("SignalR: Successfully sent message {MessageId} to chat {ChatId} by user {ActorId}", messageModel.Id, chatId, actorId);
+        await this.Clients
+            .Groups(usersToNotify.Select(user => user.ToString()))
+            .SendAsync("ReceiveMessage", messageAndChatModel.Message);
+
+        Logger.Information("SignalR: Successfully sent message {MessageId} to chat {ChatId} by user {ActorId}", messageAndChatModel.Message.Id, chatId, actorId);
+    }
+
+    public async Task UpdateMessage(Guid chatId, Guid messageId, string content)
+    {
+        var actorId = GetUserId(this.Context);
+
+        Logger.Information("SignalR: User {ActorId} updating message {MessageId} in chat {ChatId}", actorId, messageId, chatId);
+
+        var messageAndChatModel = await this.mediator.Send(
+                new UpdateMessage(actorId, chatId, messageId, content),
+                this.Context.ConnectionAborted);
+
+        var usersToNotify = messageAndChatModel.Chat.Users
+            .Where(user => user.Id != actorId)
+            .Select(user => user.Id.ToString())
+            .ToList();
+
+        await this.Clients
+            .Groups(usersToNotify.Select(user => user.ToString()))
+            .SendAsync("UpdateMessage", messageAndChatModel.Message);
+
+        Logger.Information("SignalR: Successfully updated message {MessageId} in chat {ChatId} by user {ActorId}", messageId, chatId, actorId);
+    }
+
+    public async Task DeleteMessage(Guid chatId, Guid messageId)
+    {
+        var actorId = GetUserId(this.Context);
+
+        Logger.Information("SignalR: User {ActorId} deleting message {MessageId} in chat {ChatId}", actorId, messageId, chatId);
+
+        var messageAndChatModel = await this.mediator.Send(
+                new DeleteMessage(actorId, chatId, messageId),
+                this.Context.ConnectionAborted);
+
+        var usersToNotify = messageAndChatModel.Chat.Users
+            .Where(user => user.Id != actorId)
+            .Select(user => user.Id.ToString())
+            .ToList();
+
+        await this.Clients
+            .Groups(usersToNotify.Select(user => user.ToString()))
+            .SendAsync("DeleteMessage", messageAndChatModel.Message);
+
+        Logger.Information("SignalR: Successfully deleted message {MessageId} in chat {ChatId} by user {ActorId}", messageId, chatId, actorId);
     }
 
     public override async Task OnConnectedAsync()

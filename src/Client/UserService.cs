@@ -41,6 +41,8 @@ internal sealed class UserService : IAsyncDisposable
         this.messagesSignalRClient = new MessagesSignalRClient(userId, this.signalROptions.MessagesHubUrl);
         await this.messagesSignalRClient.ConnectAsync(cancellationToken);
         this.messagesSignalRClient.OnMessageReceived = this.MessageReceivedAsync;
+        this.messagesSignalRClient.OnMessageUpdated = this.MessageUpdatedAsync;
+        this.messagesSignalRClient.OnMessageDeleted = this.MessageDeletedAsync;
         this.userStatusSignalRClient = new UserStatusSignalRClient(userId, this.signalROptions.UserStatusesHubUrl);
         await this.userStatusSignalRClient.ConnectAsync(cancellationToken);
         this.userStatusSignalRClient.OnUserStatusChanged = this.UserStatusChangedAsync;
@@ -155,6 +157,41 @@ internal sealed class UserService : IAsyncDisposable
         Logger.Information("Message sent to chat {ChatId} successfully", this.currentChat.Id);
     }
 
+    public async Task UpdateMessage(Guid messageId, string newContent, CancellationToken cancellationToken)
+    {
+        EnsureArg.IsNotDefault(messageId, nameof(messageId));
+        EnsureArg.IsNotNullOrWhiteSpace(newContent, nameof(newContent));
+
+        if (this.currentChat == null)
+        {
+            Logger.Warning("Attempted to update message but no chat is open");
+            return;
+        }
+
+        Logger.Information("Updating message {MessageId} in chat {ChatId}", messageId, this.currentChat.Id);
+
+        await this.messagesSignalRClient.UpdateMessageAsync(this.currentChat.Id, messageId, newContent, cancellationToken);
+
+        Logger.Information("Message {MessageId} updated in chat {ChatId} successfully", messageId, this.currentChat.Id);
+    }
+
+    public async Task DeleteMessage(Guid messageId, CancellationToken cancellationToken)
+    {
+        EnsureArg.IsNotDefault(messageId, nameof(messageId));
+
+        if (this.currentChat == null)
+        {
+            Logger.Warning("Attempted to delete message but no chat is open");
+            return;
+        }
+
+        Logger.Information("Deleting message {MessageId} from chat {ChatId}", messageId, this.currentChat.Id);
+
+        await this.messagesSignalRClient.DeleteMessageAsync(this.currentChat.Id, messageId, cancellationToken);
+
+        Logger.Information("Message {MessageId} deleted from chat {ChatId} successfully", messageId, this.currentChat.Id);
+    }
+
     public async ValueTask DisposeAsync()
     {
         Logger.Information("Disposing UserService");
@@ -179,6 +216,44 @@ internal sealed class UserService : IAsyncDisposable
         else
         {
             Logger.Information("Received message for different chat {MessageChatId}, current chat is {CurrentChatId}",
+                message.ChatId, this.currentChat.Id);
+        }
+    }
+
+    private async Task MessageUpdatedAsync(MessageModel message)
+    {
+        EnsureArg.IsNotNull(message, nameof(message));
+
+        Logger.Information("Message {MessageId} updated in chat {ChatId}", message.Id, message.ChatId);
+
+        if (this.currentChat.Id == message.ChatId)
+        {
+            Console.Write("[UPDATED] ");
+            ConsoleWriter.WriteMessage(this.GetUser(message.UserId), message);
+            Logger.Information("Updated message displayed for current chat {ChatId}", message.ChatId);
+        }
+        else
+        {
+            Logger.Information("Updated message for different chat {MessageChatId}, current chat is {CurrentChatId}",
+                message.ChatId, this.currentChat.Id);
+        }
+    }
+
+    private async Task MessageDeletedAsync(MessageModel message)
+    {
+        EnsureArg.IsNotNull(message, nameof(message));
+
+        Logger.Information("Message {MessageId} deleted from chat {ChatId}", message.Id, message.ChatId);
+
+        if (this.currentChat.Id == message.ChatId)
+        {
+            Console.Write("[DELETED] ");
+            ConsoleWriter.WriteMessage(this.GetUser(message.UserId), message);
+            Logger.Information("Deleted message displayed for current chat {ChatId}", message.ChatId);
+        }
+        else
+        {
+            Logger.Information("Deleted message for different chat {MessageChatId}, current chat is {CurrentChatId}",
                 message.ChatId, this.currentChat.Id);
         }
     }

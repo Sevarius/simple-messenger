@@ -5,20 +5,20 @@ using Models;
 
 namespace Application.Messages.Commands;
 
-public sealed record CreateMessage : IRequest<MessageAndChatModel>
+public sealed record DeleteMessage : IRequest<MessageAndChatModel>
 {
-    public CreateMessage(Guid actorId, Guid chatId, string content)
+    public DeleteMessage(Guid actorId, Guid chatId, Guid messageId)
     {
         EnsureArg.IsNotEmpty(actorId, nameof(actorId));
         EnsureArg.IsNotEmpty(chatId, nameof(chatId));
-        EnsureArg.IsNotNullOrWhiteSpace(content, nameof(content));
+        EnsureArg.IsNotEmpty(messageId, nameof(messageId));
 
         this.ActorId = actorId;
         this.ChatId = chatId;
-        this.Content = content;
+        this.MessageId = messageId;
     }
 
     public Guid ActorId { get; }
     public Guid ChatId { get; }
-    public string Content { get; }
+    public Guid MessageId { get; }
 }

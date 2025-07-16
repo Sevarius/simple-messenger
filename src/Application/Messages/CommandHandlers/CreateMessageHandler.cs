@@ -13,7 +13,7 @@ using Serilog;
 
 namespace Application.Messages.CommandHandlers;
 
-internal sealed class CreateMessageHandler : IRequestHandler<CreateMessage, MessageModel>
+internal sealed class CreateMessageHandler : IRequestHandler<CreateMessage, MessageAndChatModel>
 {
     public CreateMessageHandler(
         IUsersRepository usersRepository,
@@ -34,7 +34,7 @@ internal sealed class CreateMessageHandler : IRequestHandler<CreateMessage, Mess
     private readonly IChatsRepository chatsRepository;
     private readonly IMessagesRepository messagesRepository;
 
-    public async Task<MessageModel> Handle(CreateMessage command, CancellationToken cancellationToken)
+    public async Task<MessageAndChatModel> Handle(CreateMessage command, CancellationToken cancellationToken)
     {
         EnsureArg.IsNotNull(command, nameof(command));
 
@@ -58,6 +58,10 @@ internal sealed class CreateMessageHandler : IRequestHandler<CreateMessage, Mess
 
         Logger.Information("Successfully created message with ID {MessageId} for chat {ChatId} by user {ActorId}", message.Id, command.ChatId, command.ActorId);
 
-        return message.ToModel();
+        return new MessageAndChatModel
+        {
+            Message = message.ToModel(),
+            Chat = chat.ToModel()
+        };
     }
 }

@@ -109,6 +109,22 @@ internal static class Program
                         await UserService.SendMessage(message!, cancellationToken);
                         Logger.Information("Message sent successfully");
                         break;
+                    case "update message":
+                        Console.WriteLine("Enter message id:");
+                        var updateMessageId = Console.ReadLine();
+                        Console.WriteLine("Enter new message content:");
+                        var newContent = Console.ReadLine();
+                        Logger.Information("Updating message: {MessageId}", updateMessageId);
+                        await UserService.UpdateMessage(Guid.Parse(updateMessageId!), newContent!, cancellationToken);
+                        Logger.Information("Message updated successfully");
+                        break;
+                    case "delete message":
+                        Console.WriteLine("Enter message id:");
+                        var deleteMessageId = Console.ReadLine();
+                        Logger.Information("Deleting message: {MessageId}", deleteMessageId);
+                        await UserService.DeleteMessage(Guid.Parse(deleteMessageId!), cancellationToken);
+                        Logger.Information("Message deleted successfully");
+                        break;
                     case "close chat":
                         Logger.Information("Closing chat");
                         await UserService.CloseChat(cancellationToken);
