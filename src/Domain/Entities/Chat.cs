@@ -48,9 +48,11 @@ public abstract class Chat : Entity
     {
         EnsureArg.IsNotNull(user, nameof(user));
 
-        if (this.users.Contains(user))
+        if (this.CreatorId == user.Id)
         {
-            this.users.Remove(user);
+            throw new InvalidOperationException("The creator of the chat cannot be removed.");
         }
+
+        this.users.Remove(user);
     }
 }

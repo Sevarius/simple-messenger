@@ -21,4 +21,18 @@ public sealed class GroupChat : Chat
 
     public const int GroupChatNameMaxLength = 100;
     public string Name { get; private set; }
+
+    public new void AddUser(User user)
+    {
+        EnsureArg.IsNotNull(user, nameof(user));
+
+        base.AddUser(user);
+    }
+
+    public new void RemoveUser(User user)
+    {
+        EnsureArg.IsNotNull(user, nameof(user));
+
+        base.RemoveUser(user);
+    }
 }

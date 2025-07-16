@@ -28,8 +28,8 @@ public class ChatsController : ControllerBase
     private static readonly ILogger Logger = Log.ForContext<ChatsController>();
     private readonly IMediator mediator;
 
-    [HttpPost]
-    public async Task<ChatModel> CreateChatAsync(
+    [HttpPost("private")]
+    public async Task<ChatModel> CreatePrivateChatAsync(
         [FromBody] CreatePrivateChatTransfer transfer,
         CancellationToken cancellationToken)
     {
@@ -42,6 +42,58 @@ public class ChatsController : ControllerBase
         Logger.Information("API: Successfully created private chat with ID {ChatId}", result.Id);
 
         return result;
+    }
+
+    [HttpPost("group")]
+    public async Task<ChatModel> CreateGroupChatAsync(
+        [FromBody] CreateGroupChatTransfer transfer,
+        CancellationToken cancellationToken)
+    {
+        EnsureArg.IsNotNull(transfer, nameof(transfer));
+
+        Logger.Information("API: Creating group chat with name {Name} by actor {ActorId}", transfer.Name, this.ActorId);
+
+        var result = await this.mediator.Send(new CreateGroupChat(this.ActorId, transfer.Name), cancellationToken);
+
+        Logger.Information("API: Successfully created group chat with ID {ChatId} and name {Name}", result.Id, transfer.Name);
+
+        return result;
+    }
+
+    [HttpPost("{chatId}/users")]
+    public async Task<IActionResult> AddUserToGroupChatAsync(
+        [FromRoute] Guid chatId,
+        [FromBody] AddUserToGroupChatTransfer transfer,
+        CancellationToken cancellationToken)
+    {
+        EnsureArg.IsNotDefault(chatId, nameof(chatId));
+        EnsureArg.IsNotNull(transfer, nameof(transfer));
+
+        Logger.Information("API: Adding user {UserId} to group chat {ChatId} by actor {ActorId}", transfer.UserId, chatId, this.ActorId);
+
+        await this.mediator.Send(new AddUserToGroupChat(this.ActorId, chatId, transfer.UserId), cancellationToken);
+
+        Logger.Information("API: Successfully added user {UserId} to group chat {ChatId}", transfer.UserId, chatId);
+
+        return this.Ok();
+    }
+
+    [HttpDelete("{chatId}/users/{userId}")]
+    public async Task<IActionResult> RemoveUserFromGroupChatAsync(
+        [FromRoute] Guid chatId,
+        [FromRoute] Guid userId,
+        CancellationToken cancellationToken)
+    {
+        EnsureArg.IsNotDefault(chatId, nameof(chatId));
+        EnsureArg.IsNotDefault(userId, nameof(userId));
+
+        Logger.Information("API: Removing user {UserId} from group chat {ChatId} by actor {ActorId}", userId, chatId, this.ActorId);
+
+        await this.mediator.Send(new RemoveUserFromGroupChat(this.ActorId, chatId, userId), cancellationToken);
+
+        Logger.Information("API: Successfully removed user {UserId} from group chat {ChatId}", userId, chatId);
+
+        return this.Ok();
     }
 
     [HttpGet]

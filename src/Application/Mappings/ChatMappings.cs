@@ -14,8 +14,9 @@ public static class ChatMappings
         return new ChatModel
         {
             Id = chat.Id,
+            CreatorId = chat.CreatorId,
             Users = chat.Users.Select(user => user.ToModel()).ToArray(),
             Name = chat is GroupChat groupChat ? groupChat.Name : null,
         };
     }
-} 
+}
