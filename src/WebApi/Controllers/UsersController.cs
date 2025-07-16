@@ -67,4 +67,20 @@ public class UsersController : ControllerBase
 
         return result;
     }
+
+    [HttpGet("{userId}/status")]
+    public async Task<bool> GetUserStatus(
+        [FromRoute] Guid userId,
+        CancellationToken cancellationToken)
+    {
+        EnsureArg.IsNotDefault(userId, nameof(userId));
+
+        Logger.Information("API: Checking if user with ID {UserId} is online", userId);
+
+        var result = await this.mediator.Send(new GetUserStatus(userId), cancellationToken);
+
+        Logger.Information("API: User with ID {UserId} is {OnlineStatus}", userId, result ? "online" : "offline");
+
+        return result;
+    }
 }

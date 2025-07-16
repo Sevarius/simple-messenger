@@ -31,7 +31,7 @@ public static class ConsoleWriter
         EnsureArg.IsNotNull(user, nameof(user));
         EnsureArg.IsNotNull(message, nameof(message));
 
-        Logger.Information("Displaying message {MessageId} from user {UserId} ({UserName})", 
+        Logger.Information("Displaying message {MessageId} from user {UserId} ({UserName})",
             message.Id, user.Id, user.UserName);
 
         Console.WriteLine($"[{message.CreatedAt}] {user.UserName}: {message.Content}");
@@ -57,6 +57,13 @@ public static class ConsoleWriter
         }
 
         Logger.Information("Successfully displayed {ChatCount} chats", chats.Length);
+    }
+
+    public static void UserStatus(Guid userId, bool isOnline)
+    {
+        EnsureArg.IsNotDefault(userId, nameof(userId));
+
+        Console.WriteLine($"User {userId} is now {(isOnline ? "online" : "offline")}");
     }
 
     public static void ClearScreen()

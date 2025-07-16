@@ -13,6 +13,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Data.Migrations\Data.Migrations.csproj" />
     <ProjectReference Include="..\Data\Data.csproj" />
+    <ProjectReference Include="..\Services\Services.csproj" />
     <ProjectReference Include="..\SignalRApi\SignalRApi.csproj" />
     <ProjectReference Include="..\WebApi\WebApi.csproj" />
   </ItemGroup>

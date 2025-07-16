@@ -13,21 +13,22 @@ namespace Client;
 
 internal sealed class UserService : IAsyncDisposable
 {
-    public UserService(string signalRUrl, IWebClient webClient)
+    public UserService(SignalROptions signalROptions, IWebClient webClient)
     {
-        EnsureArg.IsNotNullOrWhiteSpace(signalRUrl, nameof(signalRUrl));
+        EnsureArg.IsNotNull(signalROptions, nameof(signalROptions));
         EnsureArg.IsNotNull(webClient, nameof(webClient));
 
         this.webClient = webClient;
-        this.signalRUrl = signalRUrl;
+        this.signalROptions = signalROptions;
 
-        Logger.Information("UserService initialized with SignalR URL: {SignalRUrl}", signalRUrl);
+        Logger.Information("UserService initialized with SignalR URL: {SignalRUrl}", signalROptions);
     }
 
     private static readonly ILogger Logger = Log.ForContext<UserService>();
-    private readonly string signalRUrl;
+    private readonly SignalROptions signalROptions;
     private readonly IWebClient webClient;
     private MessagesSignalRClient messagesSignalRClient = null!;
+    private UserStatusSignalRClient userStatusSignalRClient = null!;
     private ChatModel currentChat = null!;
     private UserModel currentUser = null!;
 
@@ -37,9 +38,12 @@ internal sealed class UserService : IAsyncDisposable
 
         Logger.Information("Signing in user {UserId}", userId);
 
-        this.messagesSignalRClient = new MessagesSignalRClient(userId, this.signalRUrl);
+        this.messagesSignalRClient = new MessagesSignalRClient(userId, this.signalROptions.MessagesHubUrl);
         await this.messagesSignalRClient.ConnectAsync(cancellationToken);
         this.messagesSignalRClient.OnMessageReceived = this.MessageReceivedAsync;
+        this.userStatusSignalRClient = new UserStatusSignalRClient(userId, this.signalROptions.UserStatusesHubUrl);
+        await this.userStatusSignalRClient.ConnectAsync(cancellationToken);
+        this.userStatusSignalRClient.OnUserStatusChanged = this.UserStatusChangedAsync;
 
         this.currentUser = await this.webClient.GetUserAsync(userId, cancellationToken);
 
@@ -56,6 +60,9 @@ internal sealed class UserService : IAsyncDisposable
         await this.messagesSignalRClient.DisconnectAsync(cancellationToken);
         await this.messagesSignalRClient.DisposeAsync();
         this.messagesSignalRClient = null!;
+        await this.userStatusSignalRClient.DisconnectAsync(cancellationToken);
+        await this.userStatusSignalRClient.DisposeAsync();
+        this.userStatusSignalRClient = null!;
         this.currentUser = null!;
 
         Logger.Information("User signed out successfully");
@@ -174,6 +181,15 @@ internal sealed class UserService : IAsyncDisposable
             Logger.Information("Received message for different chat {MessageChatId}, current chat is {CurrentChatId}",
                 message.ChatId, this.currentChat.Id);
         }
+    }
+
+    private async Task UserStatusChangedAsync(Guid userId, bool isOnline)
+    {
+        EnsureArg.IsNotDefault(userId, nameof(userId));
+
+        Logger.Information("User {UserId} is now {Status}", userId, isOnline ? "online" : "offline");
+
+        ConsoleWriter.UserStatus(userId, isOnline);
     }
 
     private UserModel GetUser(Guid userId) => this.currentChat.Users.Single(user => user.Id == userId);

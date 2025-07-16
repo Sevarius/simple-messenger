@@ -43,4 +43,18 @@ public sealed class UsersReadOnlyRepository : IUsersReadOnlyRepository
             .SingleOrDefaultAsync(cancellationToken)
             ?? throw new InvalidOperationException($"User with ID {userId} not found.");
     }
+
+    public Task<UserModel[]> ListRelatedUsersAsync(Guid actorId, CancellationToken cancellationToken)
+    {
+        EnsureArg.IsNotDefault(actorId, nameof(actorId));
+
+        return this.dbContext.Chats
+            .AsNoTracking()
+            .Where(chat => chat.Users.Any(user => user.Id == actorId))
+            .SelectMany(chat => chat.Users)
+            .Distinct()
+            .Where(user => user.Id != actorId)
+            .Select(user => user.ToModel())
+            .ToArrayAsync(cancellationToken);
+    }
 }

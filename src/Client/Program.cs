@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Client.SignalR;
 using Client.Web;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -41,7 +42,7 @@ internal static class Program
 
             var webClient = serviceProvider.GetRequiredService<IWebClient>();
 
-            UserService = new UserService(configuration["SignalR:MessagesHubUrl"]!, webClient);
+            UserService = new UserService(configuration.GetSection("SignalR").Get<SignalROptions>()!, webClient);
 
             Logger.Information("Client initialized successfully");
 

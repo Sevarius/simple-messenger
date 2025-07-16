@@ -12,8 +12,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using Services.DependencyInjection;
 using SignalRApi;
 using SignalRApi.Configuration;
+using StackExchange.Redis;
 
 namespace Host;
 
@@ -101,7 +103,7 @@ internal static class Program
             .AddScheme<BearerTokenOptions, CustomTokenSchemeHandler>("CustomToken", configureOptions: null);
 
         var connectionString = configuration.GetConnectionString("DataBase")!;
-        Logger.Information("Configuring database context with connection string: {DatabaseConnection}", 
+        Logger.Information("Configuring database context with connection string: {DatabaseConnection}",
             connectionString.Replace(connectionString.Split(';').FirstOrDefault(x => x.Contains("Password"))?.Split('=')[1] ?? "", "***"));
 
         services.AddDbContext(connectionString, typeof(MigrationsAssemblyReference).Assembly);
@@ -115,9 +117,14 @@ internal static class Program
                 Title = "SimpleMessenger API"
             });
 
-            swaggerGenOptions.AddSignalRSwaggerGen(signalRSwaggerGenOptions => 
+            swaggerGenOptions.AddSignalRSwaggerGen(signalRSwaggerGenOptions =>
                 signalRSwaggerGenOptions.ScanAssemblies(typeof(SignalRAssemblyReference).Assembly));
         });
+
+        // Configure Redis connection
+        services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(configuration.GetConnectionString("Redis")!));
+
+        services.AddStatusService();
 
         Logger.Information("Service configuration completed successfully");
     }
