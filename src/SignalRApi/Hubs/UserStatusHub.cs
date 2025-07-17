@@ -1,12 +1,14 @@
-using Microsoft.AspNetCore.SignalR;
-using System.Threading.Tasks;
 using System;
 using System.Linq;
 using System.Security.Claims;
+using System.Threading.Tasks;
 using Application.Services;
 using Application.Users.Queries;
 using EnsureThat;
 using MediatR;
+using Microsoft.AspNetCore.SignalR;
+
+namespace SignalRApi.Hubs;
 
 internal sealed class UserStatusHub : Hub
 {

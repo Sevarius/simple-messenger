@@ -36,7 +36,7 @@ internal sealed class GetChatHandler : IRequestHandler<GetChat, ChatModel>
             throw new UnauthorizedAccessException($"User {query.ActorId} does not have access to chat {query.ChatId}");
         }
 
-        var result = await this.chatsReadOnlyRepository.GetByIdAsync(query.ChatId, cancellationToken);
+        var result = await this.chatsReadOnlyRepository.GetAsync(query.ChatId, cancellationToken);
 
         Logger.Information("Successfully retrieved chat {ChatId} for user {ActorId}", query.ChatId, query.ActorId);
 

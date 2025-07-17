@@ -28,6 +28,7 @@ public sealed class ChatsReadOnlyRepository : IChatsReadOnlyRepository
         var result = await this.dbContext.Chats
             .AsNoTracking()
             .Include(chat => chat.Users)
+            .Include(chat => chat.UserChatReadStatuses)
             .Where(chat => chat.Users.Any(user => user.Id == userId))
             .Select(chat => chat.ToModel())
             .ToListAsync(cancellationToken);
@@ -45,13 +46,14 @@ public sealed class ChatsReadOnlyRepository : IChatsReadOnlyRepository
             .AnyAsync(chat => chat.Id == chatId && chat.Users.Any(user => user.Id == userId), cancellationToken);
     }
 
-    public async Task<ChatModel> GetByIdAsync(Guid chatId, CancellationToken cancellationToken)
+    public async Task<ChatModel> GetAsync(Guid chatId, CancellationToken cancellationToken)
     {
         EnsureArg.IsNotDefault(chatId, nameof(chatId));
 
         return await this.dbContext.Chats
             .AsNoTracking()
             .Include(chat => chat.Users)
+            .Include(chat => chat.UserChatReadStatuses)
             .Where(chat => chat.Id == chatId)
             .Select(chat => chat.ToModel())
             .SingleOrDefaultAsync(cancellationToken)

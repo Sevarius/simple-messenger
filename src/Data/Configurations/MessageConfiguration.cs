@@ -38,6 +38,9 @@ public sealed class MessageConfiguration : IEntityTypeConfiguration<Message>
         builder.Property(message => message.CreatedAt)
             .IsRequired();
 
+        builder.Property<uint>("RowVersion")
+            .IsRowVersion();
+
         builder.HasIndex(message => message.ChatId);
         builder.HasIndex(message => message.UserId);
         builder.HasIndex(message => message.CreatedAt);

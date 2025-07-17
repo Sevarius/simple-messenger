@@ -14,8 +14,7 @@ public sealed class MessengerDbContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<Chat> Chats { get; set; }
     public DbSet<Message> Messages { get; set; }
-    public DbSet<PrivateChat> PrivateChats { get; set; }
-    public DbSet<GroupChat> GroupChats { get; set; }
+    public DbSet<UserChatReadStatus> UserChatReadStatuses { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

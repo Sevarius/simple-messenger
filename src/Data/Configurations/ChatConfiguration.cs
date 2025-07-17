@@ -10,6 +10,10 @@ public sealed class ChatConfiguration : IEntityTypeConfiguration<Chat>
     {
         builder.ToTable("chats");
 
+        builder.HasDiscriminator<string>("chat_type")
+            .HasValue<PrivateChat>("private_chat")
+            .HasValue<GroupChat>("group_chat");
+
         builder.Property<long>("id")
             .UseIdentityColumn()
             .ValueGeneratedOnAdd()
@@ -24,9 +28,14 @@ public sealed class ChatConfiguration : IEntityTypeConfiguration<Chat>
             .HasMaxLength(Chat.IdempotencyKeyMaxLength)
             .IsRequired();
 
-        builder.HasDiscriminator<string>("chat_type")
-            .HasValue<PrivateChat>("private_chat")
-            .HasValue<GroupChat>("group_chat");
+        builder.Property(chat => chat.LastMessageTimestamp)
+            .IsRequired();
+
+        builder.Property(chat => chat.CreatedAt)
+            .IsRequired();
+
+        builder.Property<uint>("RowVersion")
+            .IsRowVersion();
 
         builder.HasKey(chat => chat.Id);
 
@@ -37,7 +46,7 @@ public sealed class ChatConfiguration : IEntityTypeConfiguration<Chat>
 
         builder.HasMany<Message>()
             .WithOne()
-            .HasForeignKey(chat => chat.ChatId)
+            .HasForeignKey(message => message.ChatId)
             .IsRequired()
             .OnDelete(DeleteBehavior.NoAction);
 

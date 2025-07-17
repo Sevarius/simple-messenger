@@ -26,9 +26,10 @@ public sealed class ChatsRepository : IChatsRepository
 
         var chat = await this.dbContext.Chats
             .Include(chat => chat.Users)
-            .FirstOrDefaultAsync(chat => chat.Id == chatId, cancellationToken);
+            .Include(chat => chat.UserChatReadStatuses)
+            .SingleOrDefaultAsync(chat => chat.Id == chatId, cancellationToken);
 
-        if (chat == null)
+        if (chat is null)
         {
             throw new InvalidOperationException($"Chat with ID {chatId} not found.");
         }
@@ -42,7 +43,8 @@ public sealed class ChatsRepository : IChatsRepository
 
         var chat = await this.dbContext.Set<TChat>()
             .Include(chat => chat.Users)
-            .FirstOrDefaultAsync(chat => chat.Id == chatId, cancellationToken);
+            .Include(chat => chat.UserChatReadStatuses)
+            .SingleOrDefaultAsync(chat => chat.Id == chatId, cancellationToken);
 
         if (chat == null)
         {
@@ -58,7 +60,8 @@ public sealed class ChatsRepository : IChatsRepository
 
         return await this.dbContext.Chats
             .Include(chat => chat.Users)
-            .FirstOrDefaultAsync(chat => chat.Id == chatId, cancellationToken);
+            .Include(chat => chat.UserChatReadStatuses)
+            .SingleOrDefaultAsync(chat => chat.Id == chatId, cancellationToken);
     }
 
     public async Task<TChat?> FindConcreteAsync<TChat>(Guid chatId, CancellationToken cancellationToken) where TChat : Chat
@@ -67,7 +70,8 @@ public sealed class ChatsRepository : IChatsRepository
 
         return await this.dbContext.Set<TChat>()
             .Include(chat => chat.Users)
-            .FirstOrDefaultAsync(chat => chat.Id == chatId, cancellationToken);
+            .Include(chat => chat.UserChatReadStatuses)
+            .SingleOrDefaultAsync(chat => chat.Id == chatId, cancellationToken);
     }
 
     public async Task<Chat[]> ListAsync(Guid userId, CancellationToken cancellationToken)
@@ -76,6 +80,7 @@ public sealed class ChatsRepository : IChatsRepository
 
         var result = await this.dbContext.Chats
             .Include(chat => chat.Users)
+            .Include(chat => chat.UserChatReadStatuses)
             .Where(chat => chat.Users.Any(user => user.Id == userId))
             .ToListAsync(cancellationToken);
 

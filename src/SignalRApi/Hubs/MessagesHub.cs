@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Application.Chats.Commands;
 using Application.Messages.Commands;
 using EnsureThat;
 using MediatR;
@@ -88,6 +89,28 @@ internal sealed class MessagesHub : Hub
             .SendAsync("DeleteMessage", messageAndChatModel.Message);
 
         Logger.Information("SignalR: Successfully deleted message {MessageId} in chat {ChatId} by user {ActorId}", messageId, chatId, actorId);
+    }
+
+    public async Task MarkMessagesAsRead(Guid chatId, DateTimeOffset lastReadMessageTimestamp)
+    {
+        var actorId = GetUserId(this.Context);
+
+        Logger.Information("SignalR: User {ActorId} marking messages as read in chat {ChatId} up to message {LastReadMessageId}", actorId, chatId, lastReadMessageTimestamp);
+
+        var chat = await this.mediator.Send(
+            new UpdateUserChatReadStatus(actorId, chatId, lastReadMessageTimestamp),
+            this.Context.ConnectionAborted);
+
+        var usersToNotify = chat.Users
+            .Where(user => user.Id != actorId)
+            .Select(user => user.Id.ToString())
+            .ToList();
+
+        await this.Clients
+            .Groups(usersToNotify)
+            .SendAsync("UpdateUserReadStatus", actorId, chatId, lastReadMessageTimestamp);
+
+        Logger.Information("SignalR: Successfully updated read status for user {ActorId} in chat {ChatId} up to message {LastReadMessageId}", actorId, chatId, lastReadMessageTimestamp);
     }
 
     public override async Task OnConnectedAsync()

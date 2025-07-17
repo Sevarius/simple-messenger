@@ -25,7 +25,7 @@ public sealed class MessagesRepository : IMessagesRepository
         EnsureArg.IsNotDefault(messageId, nameof(messageId));
 
         var message = await this.dbContext.Messages
-            .FirstOrDefaultAsync(message => message.Id == messageId, cancellationToken);
+            .SingleOrDefaultAsync(message => message.Id == messageId, cancellationToken);
 
         if (message == null)
         {
@@ -40,7 +40,7 @@ public sealed class MessagesRepository : IMessagesRepository
         EnsureArg.IsNotDefault(messageId, nameof(messageId));
 
         return await this.dbContext.Messages
-            .FirstOrDefaultAsync(message => message.Id == messageId, cancellationToken);
+            .SingleOrDefaultAsync(message => message.Id == messageId, cancellationToken);
     }
 
     public async Task<Message[]> ListAsync(Guid chatId, CancellationToken cancellationToken)

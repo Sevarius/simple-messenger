@@ -58,11 +58,12 @@ internal static class Program
             {
                 Logger.Information("Development environment detected, enabling Swagger");
                 app.UseSwagger();
-                app.UseSwaggerUI(c =>
-                {
-                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "SimpleMessenger API V1");
-                    c.RoutePrefix = "swagger";
-                });
+                app.UseSwaggerUI(
+                    c =>
+                    {
+                        c.SwaggerEndpoint("/swagger/v1/swagger.json", "SimpleMessenger API V1");
+                        c.RoutePrefix = "swagger";
+                    });
                 Logger.Information("Swagger UI available at /swagger");
             }
             else
@@ -72,6 +73,10 @@ internal static class Program
 
             Logger.Information("SimpleMessenger Host started successfully");
             app.Run();
+        }
+        catch (HostAbortedException)
+        {
+            // Occurs during ef core migrations
         }
         catch (Exception ex)
         {

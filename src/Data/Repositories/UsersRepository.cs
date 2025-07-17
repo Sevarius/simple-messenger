@@ -25,7 +25,7 @@ public sealed class UsersRepository : IUsersRepository
         EnsureArg.IsNotDefault(userId, nameof(userId));
 
         var user = await this.dbContext.Users
-            .FirstOrDefaultAsync(user => user.Id == userId, cancellationToken);
+            .SingleOrDefaultAsync(user => user.Id == userId, cancellationToken);
 
         if (user == null)
         {
@@ -40,7 +40,7 @@ public sealed class UsersRepository : IUsersRepository
         EnsureArg.IsNotDefault(userId, nameof(userId));
 
         return await this.dbContext.Users
-            .FirstOrDefaultAsync(user => user.Id == userId, cancellationToken);
+            .SingleOrDefaultAsync(user => user.Id == userId, cancellationToken);
     }
 
     public async Task<User[]> ListAsync(CancellationToken cancellationToken)

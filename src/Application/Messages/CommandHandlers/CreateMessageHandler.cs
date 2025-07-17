@@ -54,6 +54,8 @@ internal sealed class CreateMessageHandler : IRequestHandler<CreateMessage, Mess
 
         this.messagesRepository.Insert(message);
 
+        chat.SetLastMessageTimestamp(message.CreatedAt);
+
         await this.messagesRepository.SaveChangesAsync(cancellationToken);
 
         Logger.Information("Successfully created message with ID {MessageId} for chat {ChatId} by user {ActorId}", message.Id, command.ChatId, command.ActorId);
