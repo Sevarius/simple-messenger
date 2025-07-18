@@ -40,8 +40,6 @@ internal sealed class CreateGroupChatHandler : IRequestHandler<CreateGroupChat, 
 
         await this.chatsRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        Logger.Information("Successfully created group chat with ID {ChatId} and name {Name} by creator {CreatorId}", chat.Id, command.Name, command.CreatorId);
-
         return chat.ToModel();
     }
-} 
+}

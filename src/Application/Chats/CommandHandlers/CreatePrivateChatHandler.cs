@@ -41,8 +41,6 @@ internal sealed class CreatePrivateChatHandler : IRequestHandler<CreatePrivateCh
 
         await this.chatsRepository.SaveChangesAsync(cancellationToken);
 
-        Logger.Information("Successfully created private chat with ID {ChatId} between users {ActorId} and {InterlocutorId}", chat.Id, command.ActorId, command.InterlocutorId);
-
         return chat.ToModel();
     }
 }

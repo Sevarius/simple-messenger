@@ -9,7 +9,6 @@ using EnsureThat;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Models;
-using Serilog;
 using WebApi.Transfers;
 
 namespace WebApi.Controllers;
@@ -25,7 +24,6 @@ public class ChatsController : ControllerBase
         this.mediator = mediator;
     }
 
-    private static readonly ILogger Logger = Log.ForContext<ChatsController>();
     private readonly IMediator mediator;
 
     [HttpPost("private")]
@@ -35,11 +33,7 @@ public class ChatsController : ControllerBase
     {
         EnsureArg.IsNotNull(transfer, nameof(transfer));
 
-        Logger.Information("API: Creating private chat between actor {ActorId} and interlocutor {InterlocutorId}", this.ActorId, transfer.InterlocutorId);
-
         var result = await this.mediator.Send(new CreatePrivateChat(this.ActorId, transfer.InterlocutorId), cancellationToken);
-
-        Logger.Information("API: Successfully created private chat with ID {ChatId}", result.Id);
 
         return result;
     }
@@ -51,11 +45,7 @@ public class ChatsController : ControllerBase
     {
         EnsureArg.IsNotNull(transfer, nameof(transfer));
 
-        Logger.Information("API: Creating group chat with name {Name} by actor {ActorId}", transfer.Name, this.ActorId);
-
         var result = await this.mediator.Send(new CreateGroupChat(this.ActorId, transfer.Name), cancellationToken);
-
-        Logger.Information("API: Successfully created group chat with ID {ChatId} and name {Name}", result.Id, transfer.Name);
 
         return result;
     }
@@ -69,11 +59,7 @@ public class ChatsController : ControllerBase
         EnsureArg.IsNotDefault(chatId, nameof(chatId));
         EnsureArg.IsNotNull(transfer, nameof(transfer));
 
-        Logger.Information("API: Adding user {UserId} to group chat {ChatId} by actor {ActorId}", transfer.UserId, chatId, this.ActorId);
-
         await this.mediator.Send(new AddUserToGroupChat(this.ActorId, chatId, transfer.UserId), cancellationToken);
-
-        Logger.Information("API: Successfully added user {UserId} to group chat {ChatId}", transfer.UserId, chatId);
 
         return this.Ok();
     }
@@ -87,11 +73,7 @@ public class ChatsController : ControllerBase
         EnsureArg.IsNotDefault(chatId, nameof(chatId));
         EnsureArg.IsNotDefault(userId, nameof(userId));
 
-        Logger.Information("API: Removing user {UserId} from group chat {ChatId} by actor {ActorId}", userId, chatId, this.ActorId);
-
         await this.mediator.Send(new RemoveUserFromGroupChat(this.ActorId, chatId, userId), cancellationToken);
-
-        Logger.Information("API: Successfully removed user {UserId} from group chat {ChatId}", userId, chatId);
 
         return this.Ok();
     }
@@ -99,11 +81,7 @@ public class ChatsController : ControllerBase
     [HttpGet]
     public async Task<ChatModel[]> ListChatsAsync(CancellationToken cancellationToken)
     {
-        Logger.Information("API: Listing chats for user {ActorId}", this.ActorId);
-
         var result = await this.mediator.Send(new ListChats(this.ActorId), cancellationToken);
-
-        Logger.Information("API: Successfully listed {ChatCount} chats for user {ActorId}", result.Length, this.ActorId);
 
         return result;
     }
@@ -115,11 +93,7 @@ public class ChatsController : ControllerBase
     {
         EnsureArg.IsNotDefault(chatId, nameof(chatId));
 
-        Logger.Information("API: Getting chat {ChatId} for user {ActorId}", chatId, this.ActorId);
-
         var result = await this.mediator.Send(new GetChat(this.ActorId, chatId), cancellationToken);
-
-        Logger.Information("API: Successfully retrieved chat {ChatId} for user {ActorId}", chatId, this.ActorId);
 
         return result;
     }

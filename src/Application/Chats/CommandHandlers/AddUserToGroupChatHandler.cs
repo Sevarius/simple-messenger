@@ -42,7 +42,5 @@ internal sealed class AddUserToGroupChatHandler : IRequestHandler<AddUserToGroup
         groupChat.AddUser(userToAdd);
 
         await this.chatsRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-        Logger.Information("Successfully added user {UserId} to group chat {ChatId}", command.UserId, command.ChatId);
     }
-} 
+}

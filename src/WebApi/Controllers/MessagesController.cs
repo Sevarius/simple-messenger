@@ -8,7 +8,6 @@ using EnsureThat;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Models;
-using Serilog;
 
 namespace WebApi.Controllers;
 
@@ -23,7 +22,6 @@ public class MessagesController : ControllerBase
         this.mediator = mediator;
     }
 
-    private static readonly ILogger Logger = Log.ForContext<MessagesController>();
     private readonly IMediator mediator;
 
     [HttpGet("{messageId:guid}")]
@@ -35,11 +33,7 @@ public class MessagesController : ControllerBase
         EnsureArg.IsNotDefault(chatId, nameof(chatId));
         EnsureArg.IsNotDefault(messageId, nameof(messageId));
 
-        Logger.Information("API: Getting message {MessageId} from chat {ChatId} for user {ActorId}", messageId, chatId, this.ActorId);
-
         var result = await this.mediator.Send(new GetMessage(this.ActorId, chatId, messageId), cancellationToken);
-
-        Logger.Information("API: Successfully retrieved message {MessageId} from chat {ChatId} for user {ActorId}", messageId, chatId, this.ActorId);
 
         return result;
     }
@@ -52,11 +46,7 @@ public class MessagesController : ControllerBase
         EnsureArg.IsNotDefault(chatId, nameof(chatId));
         EnsureArg.IsNotDefault(this.ActorId, nameof(this.ActorId));
 
-        Logger.Information("API: Listing messages for chat {ChatId} by user {ActorId}", chatId, this.ActorId);
-
         var result = await this.mediator.Send(new ListMessages(this.ActorId, chatId), cancellationToken);
-
-        Logger.Information("API: Successfully listed {MessageCount} messages for chat {ChatId}", result.Length, chatId);
 
         return result;
     }

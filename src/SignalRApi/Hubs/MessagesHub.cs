@@ -29,8 +29,6 @@ internal sealed class MessagesHub : Hub
     {
         var actorId = GetUserId(this.Context);
 
-        Logger.Information("SignalR: User {ActorId} sending message to chat {ChatId}", actorId, chatId);
-
         var messageAndChatModel = await this.mediator.Send(
                 new CreateMessage(actorId, chatId, content),
                 this.Context.ConnectionAborted);
@@ -43,15 +41,11 @@ internal sealed class MessagesHub : Hub
         await this.Clients
             .Groups(usersToNotify.Select(user => user.ToString()))
             .SendAsync("ReceiveMessage", messageAndChatModel.Message);
-
-        Logger.Information("SignalR: Successfully sent message {MessageId} to chat {ChatId} by user {ActorId}", messageAndChatModel.Message.Id, chatId, actorId);
     }
 
     public async Task UpdateMessage(Guid chatId, Guid messageId, string content)
     {
         var actorId = GetUserId(this.Context);
-
-        Logger.Information("SignalR: User {ActorId} updating message {MessageId} in chat {ChatId}", actorId, messageId, chatId);
 
         var messageAndChatModel = await this.mediator.Send(
                 new UpdateMessage(actorId, chatId, messageId, content),
@@ -65,15 +59,11 @@ internal sealed class MessagesHub : Hub
         await this.Clients
             .Groups(usersToNotify.Select(user => user.ToString()))
             .SendAsync("UpdateMessage", messageAndChatModel.Message);
-
-        Logger.Information("SignalR: Successfully updated message {MessageId} in chat {ChatId} by user {ActorId}", messageId, chatId, actorId);
     }
 
     public async Task DeleteMessage(Guid chatId, Guid messageId)
     {
         var actorId = GetUserId(this.Context);
-
-        Logger.Information("SignalR: User {ActorId} deleting message {MessageId} in chat {ChatId}", actorId, messageId, chatId);
 
         var messageAndChatModel = await this.mediator.Send(
                 new DeleteMessage(actorId, chatId, messageId),
@@ -87,15 +77,11 @@ internal sealed class MessagesHub : Hub
         await this.Clients
             .Groups(usersToNotify.Select(user => user.ToString()))
             .SendAsync("DeleteMessage", messageAndChatModel.Message);
-
-        Logger.Information("SignalR: Successfully deleted message {MessageId} in chat {ChatId} by user {ActorId}", messageId, chatId, actorId);
     }
 
     public async Task MarkMessagesAsRead(Guid chatId, DateTimeOffset lastReadMessageTimestamp)
     {
         var actorId = GetUserId(this.Context);
-
-        Logger.Information("SignalR: User {ActorId} marking messages as read in chat {ChatId} up to message {LastReadMessageId}", actorId, chatId, lastReadMessageTimestamp);
 
         var chat = await this.mediator.Send(
             new UpdateUserChatReadStatus(actorId, chatId, lastReadMessageTimestamp),
@@ -109,24 +95,18 @@ internal sealed class MessagesHub : Hub
         await this.Clients
             .Groups(usersToNotify)
             .SendAsync("UpdateUserReadStatus", actorId, chatId, lastReadMessageTimestamp);
-
-        Logger.Information("SignalR: Successfully updated read status for user {ActorId} in chat {ChatId} up to message {LastReadMessageId}", actorId, chatId, lastReadMessageTimestamp);
     }
 
     public override async Task OnConnectedAsync()
     {
         var userId = GetUserId(this.Context);
-        Logger.Information("SignalR: User {UserId} connected with connection {ConnectionId}", userId, this.Context.ConnectionId);
 
         await this.Groups.AddToGroupAsync(this.Context.ConnectionId, userId.ToString());
-
-        Logger.Information("SignalR: User {UserId} added to group", userId);
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         var userId = GetUserId(this.Context);
-        Logger.Information("SignalR: User {UserId} disconnected with connection {ConnectionId}", userId, this.Context.ConnectionId);
 
         if (exception != null)
         {
@@ -134,8 +114,6 @@ internal sealed class MessagesHub : Hub
         }
 
         await this.Groups.RemoveFromGroupAsync(this.Context.ConnectionId, userId.ToString());
-
-        Logger.Information("SignalR: User {UserId} removed from group", userId);
     }
 
     private static Guid GetUserId(HubCallerContext context)

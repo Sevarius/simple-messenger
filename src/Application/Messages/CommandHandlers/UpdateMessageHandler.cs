@@ -32,8 +32,6 @@ internal sealed class UpdateMessageHandler : IRequestHandler<UpdateMessage, Mess
     {
         EnsureArg.IsNotNull(command, nameof(command));
 
-        Logger.Information("Updating message {MessageId} in chat {ChatId} by user {ActorId}", command.MessageId, command.ChatId, command.ActorId);
-
         var chat = await this.chatsRepository.GetAsync(command.ChatId, cancellationToken);
 
         var message = await this.messagesRepository.GetAsync(command.MessageId, cancellationToken);
@@ -53,8 +51,6 @@ internal sealed class UpdateMessageHandler : IRequestHandler<UpdateMessage, Mess
         message.Modify(command.Content);
 
         await this.messagesRepository.SaveChangesAsync(cancellationToken);
-
-        Logger.Information("Successfully updated message {MessageId} in chat {ChatId} by user {ActorId}", command.MessageId, command.ChatId, command.ActorId);
 
         return new MessageAndChatModel
         {

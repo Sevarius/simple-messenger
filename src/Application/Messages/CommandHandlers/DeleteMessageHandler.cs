@@ -32,8 +32,6 @@ internal sealed class DeleteMessageHandler : IRequestHandler<DeleteMessage, Mess
     {
         EnsureArg.IsNotNull(command, nameof(command));
 
-        Logger.Information("Deleting message {MessageId} in chat {ChatId} by user {ActorId}", command.MessageId, command.ChatId, command.ActorId);
-
         var chat = await this.chatsRepository.GetAsync(command.ChatId, cancellationToken);
 
         var message = await this.messagesRepository.GetAsync(command.MessageId, cancellationToken);
@@ -53,8 +51,6 @@ internal sealed class DeleteMessageHandler : IRequestHandler<DeleteMessage, Mess
         message.Delete();
 
         await this.messagesRepository.SaveChangesAsync(cancellationToken);
-
-        Logger.Information("Successfully deleted message {MessageId} in chat {ChatId} by user {ActorId}", command.MessageId, command.ChatId, command.ActorId);
 
         return new MessageAndChatModel
         {

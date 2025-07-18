@@ -20,8 +20,6 @@ internal sealed class UserService : IAsyncDisposable
 
         this.webClient = webClient;
         this.signalROptions = signalROptions;
-
-        Logger.Information("UserService initialized with SignalR URL: {SignalRUrl}", signalROptions);
     }
 
     private static readonly ILogger Logger = Log.ForContext<UserService>();
@@ -36,8 +34,6 @@ internal sealed class UserService : IAsyncDisposable
     {
         EnsureArg.IsNotEmpty(userId, nameof(userId));
 
-        Logger.Information("Signing in user {UserId}", userId);
-
         this.messagesSignalRClient = new MessagesSignalRClient(userId, this.signalROptions.MessagesHubUrl);
         await this.messagesSignalRClient.ConnectAsync(cancellationToken);
         this.messagesSignalRClient.OnMessageReceived = this.MessageReceivedAsync;
@@ -48,17 +44,10 @@ internal sealed class UserService : IAsyncDisposable
         this.userStatusSignalRClient.OnUserStatusChanged = this.UserStatusChangedAsync;
 
         this.currentUser = await this.webClient.GetUserAsync(userId, cancellationToken);
-
-        Logger.Information("User {UserId} ({UserName}) signed in successfully", userId, this.currentUser.UserName);
     }
 
     public async Task SignOut(CancellationToken cancellationToken)
     {
-        if (this.currentUser != null)
-        {
-            Logger.Information("Signing out user {UserId} ({UserName})", this.currentUser.Id, this.currentUser.UserName);
-        }
-
         await this.messagesSignalRClient.DisconnectAsync(cancellationToken);
         await this.messagesSignalRClient.DisposeAsync();
         this.messagesSignalRClient = null!;
@@ -66,16 +55,11 @@ internal sealed class UserService : IAsyncDisposable
         await this.userStatusSignalRClient.DisposeAsync();
         this.userStatusSignalRClient = null!;
         this.currentUser = null!;
-
-        Logger.Information("User signed out successfully");
     }
 
     public async Task CreateChatAsync(Guid interlocutorId, CancellationToken cancellationToken)
     {
         EnsureArg.IsNotEmpty(interlocutorId, nameof(interlocutorId));
-
-        Logger.Information("Creating private chat between user {UserId} and interlocutor {InterlocutorId}",
-            this.currentUser.Id, interlocutorId);
 
         var chat = await this.webClient.CreatePrivateChatAsync(
             this.currentUser.Id,
@@ -88,26 +72,18 @@ internal sealed class UserService : IAsyncDisposable
         ConsoleWriter.OpenChat(chat);
 
         this.currentChat = chat;
-
-        Logger.Information("Private chat {ChatId} created successfully", chat.Id);
     }
 
     public async Task ListChats(CancellationToken cancellationToken)
     {
-        Logger.Information("Listing chats for user {UserId}", this.currentUser.Id);
-
         var chats = await this.webClient.ListChatsAsync(this.currentUser.Id, cancellationToken);
 
         ConsoleWriter.ListChats(chats);
-
-        Logger.Information("Listed {ChatCount} chats for user {UserId}", chats.Length, this.currentUser.Id);
     }
 
     public async Task OpenChat(Guid chatId, CancellationToken cancellationToken)
     {
         EnsureArg.IsNotEmpty(chatId, nameof(chatId));
-
-        Logger.Information("Opening chat {ChatId} for user {UserId}", chatId, this.currentUser.Id);
 
         var chat = await this.webClient.GetChatAsync(this.currentUser.Id, chatId, cancellationToken);
         ConsoleWriter.OpenChat(chat);
@@ -115,8 +91,6 @@ internal sealed class UserService : IAsyncDisposable
         this.currentChat = chat;
 
         var messages = await this.webClient.ListMessagesAsync(this.currentUser.Id, chatId, cancellationToken);
-
-        Logger.Information("Chat {ChatId} opened with {MessageCount} messages", chatId, messages.Length);
 
         foreach (var message in messages)
         {
@@ -128,9 +102,7 @@ internal sealed class UserService : IAsyncDisposable
     {
         if (this.currentChat != null)
         {
-            Logger.Information("Closing chat {ChatId}", this.currentChat.Id);
             this.currentChat = null!;
-            Logger.Information("Chat closed successfully");
         }
         else
         {
@@ -148,13 +120,9 @@ internal sealed class UserService : IAsyncDisposable
             return;
         }
 
-        Logger.Information("Sending message to chat {ChatId}", this.currentChat.Id);
-
         await this.messagesSignalRClient.SendMessageAsync(this.currentChat.Id, message, cancellationToken);
 
         Console.WriteLine(message);
-
-        Logger.Information("Message sent to chat {ChatId} successfully", this.currentChat.Id);
     }
 
     public async Task UpdateMessage(Guid messageId, string newContent, CancellationToken cancellationToken)
@@ -168,11 +136,7 @@ internal sealed class UserService : IAsyncDisposable
             return;
         }
 
-        Logger.Information("Updating message {MessageId} in chat {ChatId}", messageId, this.currentChat.Id);
-
         await this.messagesSignalRClient.UpdateMessageAsync(this.currentChat.Id, messageId, newContent, cancellationToken);
-
-        Logger.Information("Message {MessageId} updated in chat {ChatId} successfully", messageId, this.currentChat.Id);
     }
 
     public async Task DeleteMessage(Guid messageId, CancellationToken cancellationToken)
@@ -185,17 +149,11 @@ internal sealed class UserService : IAsyncDisposable
             return;
         }
 
-        Logger.Information("Deleting message {MessageId} from chat {ChatId}", messageId, this.currentChat.Id);
-
         await this.messagesSignalRClient.DeleteMessageAsync(this.currentChat.Id, messageId, cancellationToken);
-
-        Logger.Information("Message {MessageId} deleted from chat {ChatId} successfully", messageId, this.currentChat.Id);
     }
 
     public async ValueTask DisposeAsync()
     {
-        Logger.Information("Disposing UserService");
-
         await this.messagesSignalRClient.DisposeAsync();
         await this.webClient.DisposeAsync();
 

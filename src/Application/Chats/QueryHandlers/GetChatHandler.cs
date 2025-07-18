@@ -26,8 +26,6 @@ internal sealed class GetChatHandler : IRequestHandler<GetChat, ChatModel>
     {
         EnsureArg.IsNotNull(query, nameof(query));
 
-        Logger.Information("Getting chat {ChatId} for user {ActorId}", query.ChatId, query.ActorId);
-
         var hasAccess = await this.chatsReadOnlyRepository.IsUserInChatAsync(query.ActorId, query.ChatId, cancellationToken);
 
         if (!hasAccess)
@@ -37,8 +35,6 @@ internal sealed class GetChatHandler : IRequestHandler<GetChat, ChatModel>
         }
 
         var result = await this.chatsReadOnlyRepository.GetAsync(query.ChatId, cancellationToken);
-
-        Logger.Information("Successfully retrieved chat {ChatId} for user {ActorId}", query.ChatId, query.ActorId);
 
         return result;
     }

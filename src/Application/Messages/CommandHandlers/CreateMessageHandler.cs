@@ -38,8 +38,6 @@ internal sealed class CreateMessageHandler : IRequestHandler<CreateMessage, Mess
     {
         EnsureArg.IsNotNull(command, nameof(command));
 
-        Logger.Information("Creating message for chat {ChatId} by user {ActorId}", command.ChatId, command.ActorId);
-
         var actor = await this.usersRepository.GetAsync(command.ActorId, cancellationToken);
 
         var chat = await this.chatsRepository.GetAsync(command.ChatId, cancellationToken);
@@ -57,8 +55,6 @@ internal sealed class CreateMessageHandler : IRequestHandler<CreateMessage, Mess
         chat.SetLastMessageTimestamp(message.CreatedAt);
 
         await this.messagesRepository.SaveChangesAsync(cancellationToken);
-
-        Logger.Information("Successfully created message with ID {MessageId} for chat {ChatId} by user {ActorId}", message.Id, command.ChatId, command.ActorId);
 
         return new MessageAndChatModel
         {

@@ -43,6 +43,6 @@ internal sealed class RemoveUserFromGroupChatHandler : IRequestHandler<RemoveUse
 
         await this.chatsRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        Logger.Information("Successfully removed user {UserId} from group chat {ChatId}", command.UserId, command.ChatId);
+
     }
 }

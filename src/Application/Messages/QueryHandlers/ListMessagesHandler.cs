@@ -31,8 +31,6 @@ internal sealed class ListMessagesHandler : IRequestHandler<ListMessages, Messag
     {
         EnsureArg.IsNotNull(query, nameof(query));
 
-        Logger.Information("Listing messages for chat {ChatId} by user {ActorId}", query.ChatId, query.ActorId);
-
         var hasAccess = await this.chatsReadOnlyRepository.IsUserInChatAsync(query.ActorId, query.ChatId, cancellationToken);
 
         if (!hasAccess)
@@ -42,8 +40,6 @@ internal sealed class ListMessagesHandler : IRequestHandler<ListMessages, Messag
         }
 
         var messages = await this.messagesReadOnlyRepository.ListAsync(query.ChatId, cancellationToken);
-
-        Logger.Information("Successfully retrieved {MessageCount} messages for chat {ChatId}", messages.Length, query.ChatId);
 
         return messages;
     }

@@ -18,7 +18,6 @@ public sealed class WebClient : IWebClient
     public WebClient(HttpClient httpClient)
     {
         this.httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-        Logger.Information("WebClient initialized with base address: {BaseAddress}", httpClient.BaseAddress);
     }
 
     private static readonly ILogger Logger = Log.ForContext<WebClient>();
@@ -35,24 +34,18 @@ public sealed class WebClient : IWebClient
     {
         EnsureArg.IsNotNullOrWhiteSpace(userName, nameof(userName));
 
-        Logger.Information("Creating user with name: {UserName}", userName);
-
         var result = await this.PostAsync<CreateUserRequest, UserModel>(
             "api/users",
             new CreateUserRequest { UserName = userName },
             cancellationToken);
 
-        Logger.Information("User created successfully with ID: {UserId}", result.Id);
         return result;
     }
 
     public async Task<UserModel[]> ListUsersAsync(CancellationToken cancellationToken)
     {
-        Logger.Information("Listing all users");
-
         var result = await this.GetAsync<UserModel[]>("api/users", cancellationToken);
 
-        Logger.Information("Successfully retrieved {UserCount} users", result.Length);
         return result;
     }
 
@@ -60,11 +53,8 @@ public sealed class WebClient : IWebClient
     {
         EnsureArg.IsNotDefault(userId, nameof(userId));
 
-        Logger.Information("Getting user with ID: {UserId}", userId);
-
         var result = await this.GetAsync<UserModel>($"api/users/{userId}", cancellationToken);
 
-        Logger.Information("Successfully retrieved user {UserId} ({UserName})", result.Id, result.UserName);
         return result;
     }
 
@@ -74,12 +64,8 @@ public sealed class WebClient : IWebClient
         EnsureArg.IsNotDefault(actorId, nameof(actorId));
         EnsureArg.IsNotNull(request, nameof(request));
 
-        Logger.Information("Creating private chat for actor {ActorId} with interlocutor {InterlocutorId}",
-            actorId, request.InterlocutorId);
-
         var result = await this.PostAsync<CreatePrivateChatRequest, ChatModel>(actorId, "api/chats", request, cancellationToken);
 
-        Logger.Information("Private chat created successfully with ID: {ChatId}", result.Id);
         return result;
     }
 
@@ -87,11 +73,8 @@ public sealed class WebClient : IWebClient
     {
         EnsureArg.IsNotDefault(actorId, nameof(actorId));
 
-        Logger.Information("Listing chats for user {ActorId}", actorId);
-
         var result = await this.GetAsync<ChatModel[]>(actorId, "api/chats", cancellationToken);
 
-        Logger.Information("Successfully retrieved {ChatCount} chats for user {ActorId}", result.Length, actorId);
         return result;
     }
 
@@ -100,11 +83,8 @@ public sealed class WebClient : IWebClient
         EnsureArg.IsNotDefault(actorId, nameof(actorId));
         EnsureArg.IsNotDefault(chatId, nameof(chatId));
 
-        Logger.Information("Getting chat {ChatId} for user {ActorId}", chatId, actorId);
-
         var result = await this.GetAsync<ChatModel>(actorId, $"api/chats/{chatId}", cancellationToken);
 
-        Logger.Information("Successfully retrieved chat {ChatId} for user {ActorId}", chatId, actorId);
         return result;
     }
 
@@ -114,11 +94,8 @@ public sealed class WebClient : IWebClient
         EnsureArg.IsNotDefault(actorId, nameof(actorId));
         EnsureArg.IsNotDefault(chatId, nameof(chatId));
 
-        Logger.Information("Listing messages for chat {ChatId} by user {ActorId}", chatId, actorId);
-
         var result = await this.GetAsync<MessageModel[]>(actorId, $"api/chats/{chatId}/messages", cancellationToken);
 
-        Logger.Information("Successfully retrieved {MessageCount} messages for chat {ChatId}", result.Length, chatId);
         return result;
     }
 
@@ -128,11 +105,8 @@ public sealed class WebClient : IWebClient
         EnsureArg.IsNotDefault(chatId, nameof(chatId));
         EnsureArg.IsNotDefault(messageId, nameof(messageId));
 
-        Logger.Information("Getting message {MessageId} from chat {ChatId} for user {ActorId}", messageId, chatId, actorId);
-
         var result = await this.GetAsync<MessageModel>(actorId, $"api/chats/{chatId}/messages/{messageId}", cancellationToken);
 
-        Logger.Information("Successfully retrieved message {MessageId} from chat {ChatId}", messageId, chatId);
         return result;
     }
 
@@ -162,8 +136,6 @@ public sealed class WebClient : IWebClient
 
     private async Task<TResponse> PostAsync<TResponse>(Guid? actorId, string url, HttpContent content, CancellationToken cancellationToken)
     {
-        Logger.Information("Making POST request to {Url} with actor {ActorId}", url, actorId);
-
         var request = new HttpRequestMessage(HttpMethod.Post, url);
 
         if (actorId is not null)
@@ -181,7 +153,6 @@ public sealed class WebClient : IWebClient
             var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
             var result = JsonConvert.DeserializeObject<TResponse>(responseContent, this.jsonSettings)!;
 
-            Logger.Information("POST request to {Url} completed successfully", url);
             return result;
         }
         catch (Exception ex)
@@ -195,8 +166,6 @@ public sealed class WebClient : IWebClient
     {
         EnsureArg.IsNotNullOrWhiteSpace(url, nameof(url));
 
-        Logger.Information("Making GET request to {Url}", url);
-
         try
         {
             var response = await this.httpClient.GetAsync(url, cancellationToken);
@@ -205,7 +174,6 @@ public sealed class WebClient : IWebClient
             var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
             var result = JsonConvert.DeserializeObject<TResponse>(responseContent, this.jsonSettings)!;
 
-            Logger.Information("GET request to {Url} completed successfully", url);
             return result;
         }
         catch (Exception ex)
@@ -220,8 +188,6 @@ public sealed class WebClient : IWebClient
         EnsureArg.IsNotDefault(actorId, nameof(actorId));
         EnsureArg.IsNotNullOrWhiteSpace(url, nameof(url));
 
-        Logger.Information("Making authenticated GET request to {Url} for actor {ActorId}", url, actorId);
-
         var request = new HttpRequestMessage(HttpMethod.Get, url);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", actorId.ToString());
 
@@ -233,7 +199,6 @@ public sealed class WebClient : IWebClient
             var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
             var result = JsonConvert.DeserializeObject<TResponse>(responseContent, this.jsonSettings)!;
 
-            Logger.Information("Authenticated GET request to {Url} completed successfully", url);
             return result;
         }
         catch (Exception ex)
@@ -245,7 +210,6 @@ public sealed class WebClient : IWebClient
 
     public ValueTask DisposeAsync()
     {
-        Logger.Information("Disposing WebClient");
         this.httpClient.Dispose();
         return ValueTask.CompletedTask;
     }
